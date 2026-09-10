@@ -532,6 +532,65 @@
         "kind": "constructed",
         "rationale": "There is no read for a single submode. Verification re-reads the whole list, which also shows whether the device moved a different submode in response."
       }
+    },
+    {
+      "id": "transparency-level-full",
+      "kind": "payload",
+      "command": "anc_transparency_level",
+      "payload": "64",
+      "decoded": {
+        "level": 1.0
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Read unchanged across every mode — ANC, off and transparency — while the feature 13 level read swung between 0 and 100 over the same sequence."
+      }
+    },
+    {
+      "id": "transparency-level-three-quarters",
+      "kind": "payload",
+      "command": "anc_transparency_level",
+      "payload": "4b",
+      "decoded": {
+        "level": 0.75
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Read while transparency was off and the feature 13 level read 0. The stored transparency level survives the mode being elsewhere."
+      }
+    },
+    {
+      "id": "restore-rewrites-transparency-after-enabling-anc",
+      "kind": "sequence",
+      "sequence": "anc_state",
+      "given": {
+        "target": {
+          "anc": true,
+          "transparency": true
+        },
+        "current": {
+          "anc": false,
+          "transparency": true
+        }
+      },
+      "writes": [
+        "ff03000104951a0401",
+        "ff0300010495180401"
+      ],
+      "verify": [
+        "ff03000004951a05",
+        "ff03000004951805"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Transparency already reads as wanted and is written anyway, because the ANC-on write ahead of it clears the flag. Sending only the ANC write was tried first: it verified, and left transparency off."
+      }
     }
   ]
 }

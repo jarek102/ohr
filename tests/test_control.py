@@ -125,6 +125,24 @@ def test_two_step_sequence_verifies_each_step_on_its_own_feature() -> None:
     ]
 
 
+def test_restoring_rewrites_a_flag_the_previous_write_will_clear() -> None:
+    """Enabling ANC clears transparency, so a transparency flag that is already correct
+    does not stay correct. Skipping it would verify every write and still miss."""
+    plan = anc.plan_state(
+        anc.State(anc=True, transparency=True), anc.State(anc=False, transparency=True)
+    )
+    assert [step.label for step in plan] == ["anc on", "transparency on"]
+
+
+def test_restoring_leaves_a_flag_alone_when_nothing_will_disturb_it() -> None:
+    """The exception above is not licence to write everything: ANC is not being
+    enabled here, so transparency is left as it is."""
+    plan = anc.plan_state(
+        anc.State(anc=False, transparency=True), anc.State(anc=True, transparency=True)
+    )
+    assert [step.label for step in plan] == ["anc off"]
+
+
 def test_no_steps_is_not_success() -> None:
     """An empty plan has changed nothing, so it must not read as a completed change."""
     assert not control.apply(Session(FakeConnection([])), []).complete

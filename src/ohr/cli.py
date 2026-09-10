@@ -96,6 +96,7 @@ def _probe_plan() -> list[tuple[str, object, object]]:
         ("anc.transparency", anc.request_transparency(), anc.decode_transparency),
         ("anc.submodes", anc.request_submodes(), anc.decode_submodes),
         ("anc.level", anc.request_level(), anc.decode_level),
+        ("anc.transparency_level", anc.request_transparency_level(), anc.decode_level),
         ("eq.mode", equaliser.request_mode(), equaliser.decode_mode),
         ("eq.configuration", equaliser.request_configuration(), equaliser.decode_configuration),
         ("eq.bass_boost", equaliser.request_bass_boost(), equaliser.decode_bass_boost),
@@ -184,9 +185,12 @@ class Snapshot(NamedTuple):
     state: anc.State
     level: float | None
     submodes: tuple
+    transparency_level: float | None = None
 
 
-def _read_noise_control(session: Session, timeout: float) -> tuple[anc.State, float | None, tuple]:
+def _read_noise_control(
+    session: Session, timeout: float
+) -> tuple[anc.State, float | None, tuple, float | None]:
     """Everything the noise-control screen shows, as one snapshot.
 
     Transparency is read into ``None`` rather than ``False`` when the device declines
@@ -213,10 +217,16 @@ def _read_noise_control(session: Session, timeout: float) -> tuple[anc.State, fl
         ),
         read(anc.request_level(), anc.decode_level),
         read(anc.request_submodes(), anc.decode_submodes) or (),
+        read(anc.request_transparency_level(), anc.decode_level),
     )
 
 
-def _show(state: anc.State, level: float | None, submodes: tuple) -> None:
+def _show(
+    state: anc.State,
+    level: float | None,
+    submodes: tuple,
+    transparency_level: float | None = None,
+) -> None:
     mode = state.mode
     print(f"  mode         {mode.value if mode else 'unknown'}")
     print(f"  anc          {'on' if state.anc else 'off'}")
@@ -225,7 +235,10 @@ def _show(state: anc.State, level: float | None, submodes: tuple) -> None:
     )
     print(f"  transparency {transparency}")
     if level is not None:
-        print(f"  level        {level * 100:.0f}%")
+        # Whichever path is active, so it is labelled by what it actually is.
+        print(f"  active level {level * 100:.0f}%")
+    if transparency_level is not None:
+        print(f"  transp level {transparency_level * 100:.0f}%")
     for submode in submodes:
         print(f"  submode      {submode.name or submode.id} = {submode.state}")
 

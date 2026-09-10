@@ -223,6 +223,7 @@
                   "anc_transparency",
                   "anc_submodes",
                   "anc_level",
+                  "anc_transparency_level",
                   "eq_mode",
                   "eq_configuration",
                   "eq_band_gain",

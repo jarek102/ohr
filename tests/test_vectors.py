@@ -105,6 +105,7 @@ COMMANDS = {
     "anc_enabled": (anc.decode_enabled, lambda r: {"enabled": r}),
     "anc_transparency": (anc.decode_transparency, lambda r: {"enabled": r}),
     "anc_level": (anc.decode_level, lambda r: {"level": r}),
+    "anc_transparency_level": (anc.decode_level, lambda r: {"level": r}),
     "anc_submodes": (
         anc.decode_submodes,
         lambda r: {"submodes": [{"id": s.id, "name": s.name, "state": s.state} for s in r]},

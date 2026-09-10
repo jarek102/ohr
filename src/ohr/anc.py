@@ -78,8 +78,24 @@ def request_submodes() -> Frame:
 
 
 def request_level() -> Frame:
-    """The ANC/transparency level. Empty payload."""
+    """The level of whichever path is currently active. Empty payload.
+
+    Not "the ANC level": with transparency on this mirrors the transparency level, and
+    otherwise it reports the ANC one. Read it alongside the flags or it means nothing.
+    """
     return Frame(VENDOR_SENNHEISER, FEATURE_ANC, MessageType.COMMAND, OP_LEVEL)
+
+
+def request_transparency_level() -> Frame:
+    """The stored transparency level, whether or not transparency is on. Empty payload.
+
+    Feature 12 keeps its own level, and this read is unaffected by the mode — which is
+    what makes it useful: it is the only one of the two that means the same thing every
+    time it is called.
+    """
+    return Frame(
+        VENDOR_SENNHEISER, FEATURE_TRANSPARENT_HEARING, MessageType.COMMAND, OP_LEVEL
+    )
 
 
 def decode_enabled(payload: bytes) -> bool:
@@ -124,7 +140,13 @@ def decode_submodes(payload: bytes) -> tuple[Submode, ...]:
 
 
 def request_set_enabled(on: bool) -> Frame:
-    """Turn ANC on or off. Payload is one flag byte."""
+    """Turn ANC on or off. Payload is one flag byte.
+
+    **Turning ANC on also clears the transparency flag.** Writing ``True`` to a device
+    that already has ANC on still dropped transparency, so the side effect belongs to
+    the write and not to any change of value. Turning ANC *off* leaves transparency
+    alone; the coupling runs one way only.
+    """
     return Frame(
         VENDOR_SENNHEISER,
         FEATURE_ANC,
@@ -300,20 +322,30 @@ def plan_state(target: State, current: State) -> tuple[Step, ...]:
     device in a state it was not in — selecting *Transparency* again does not put ANC
     back the way it was found.
 
-    Flags already correct produce no write. There is nothing to verify in a change
-    that is not being made, and the read that produced ``current`` is the evidence.
+    Flags already correct produce no write — with one exception, which is the whole
+    reason this function is not a two-line loop. **Enabling ANC clears transparency**
+    (see :func:`request_set_enabled`), so a transparency flag that is already correct
+    stops being correct the moment an ANC-on write goes out ahead of it. It is
+    rewritten in that case rather than skipped.
 
-    Everything that must go off goes off first, matching :func:`plan_mode`.
+    Skipping it instead produces the worst available outcome: a plan that verifies
+    every write it makes and still leaves the device somewhere else.
+
+    Everything that must go off goes off first, matching :func:`plan_mode`, and ANC is
+    set before transparency so the coupling runs before the flag it would disturb.
     """
     off: list[Step] = []
     on: list[Step] = []
-    for want, have, step in (
-        (target.anc, current.anc, _enabled_step),
-        (target.transparency, current.transparency, _transparency_step),
-    ):
-        if want is None or want == have:
-            continue
-        (on if want else off).append(step(bool(want)))
+
+    if target.anc != current.anc:
+        (on if target.anc else off).append(_enabled_step(target.anc))
+    enabling_anc = any(step.expect for step in on)
+
+    if target.transparency is False and current.transparency:
+        off.append(_transparency_step(False))
+    elif target.transparency and (not current.transparency or enabling_anc):
+        on.append(_transparency_step(True))
+
     return (*off, *on)
 
 

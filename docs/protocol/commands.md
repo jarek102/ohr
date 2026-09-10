@@ -26,7 +26,8 @@ not evidence that anything changed.
 | `0x1409` | Maximum connections | empty |
 | `0x1805` | Transparency enabled | empty |
 | `0x1a01` | Noise-control submodes | empty |
-| `0x1a03` | Level | empty |
+| `0x1803` | Transparency level | empty |
+| `0x1a03` | Active level | empty |
 | `0x1a05` | ANC enabled | empty |
 
 Writes:
@@ -160,22 +161,35 @@ Both devices returned the same three identifiers. State ranges differ by submode
 are not assumed here — anti-wind is known to accept more than two values — so states
 are kept as raw numbers.
 
-### `0x1a03` — level
+### `0x1a03` — active level · `0x1803` — transparency level
 
 Empty payload. Reply is one byte, in hundredths: `0x64` = 1.0.
 
-**One command, but not one setting.** The value tracks whichever path is currently
-active. On the over-ear model, with transparency on it read 100; turning transparency
-off — leaving ANC on — dropped the same read to 0; writing 40 and re-enabling
-transparency brought it back to 100. Two levels are stored, and this read exposes only
-the active one.
+**Two levels are stored, and the two reads are not interchangeable.** Cycling the
+over-ear model through all three modes while reading both:
 
-So a level is meaningful only alongside the flags it was read with. Comparing two
-readings taken under different flags compares two different quantities, and *restoring*
-one across a flag change writes it into the wrong slot.
+| Flags | `0x1a03` | `0x1803` |
+|---|---|---|
+| ANC on, transparency on | 100 | 100 |
+| ANC on, transparency off | 0 | 100 |
+| both off | 0 | 100 |
+| ANC off, transparency on | 100 | 100 |
+
+`0x1803` never moved. `0x1a03` followed whichever path was active — mirroring the
+transparency level whenever transparency was on, and reporting the ANC level otherwise.
+The earbuds show the same split from the other side: `0x1803` reads 75 while `0x1a03`
+reads 0, with transparency off.
+
+So `0x1803` is the one that means the same thing every time it is called. A reading from
+`0x1a03` is meaningful only alongside the flags it was taken with — comparing two of
+them across a flag change compares two different quantities, and restoring one that way
+writes it into the wrong slot.
 
 **Not a proxy for whether noise control is active** either: the earbuds reported 0.0
 while ANC read as enabled, which is simply their ANC level.
+
+`0x1801` also answers, with a single byte, on both models. What it means has not been
+established, so it is not specified here.
 
 ## Features 4 and 8 — equaliser
 
@@ -303,9 +317,10 @@ unchanged — so read it back after one of those too.
 ### A read-back is necessary, and not sufficient
 
 The earbuds accepted `0x1804 01`, returned success, and answered the transparency read
-with 1. Within a second the same read returned 0, and it stayed there. Both earbuds
-were charging in their case at the time; whether that is the cause has not been
-established.
+with 1. Within a second the same read returned 0, and it stayed there. Repeated with
+one earbud out of the case — the charger read confirming it, one bud charging and one
+not — with the same result, so the case alone does not explain it. It reverts from
+either starting mode, and within roughly a tenth of a second.
 
 A device can therefore acknowledge a write, confirm it, and then abandon it. An
 immediate read-back proves the device took the command; only continued observation
@@ -318,6 +333,25 @@ One flag byte: 0 off, 1 on. Both confirmed on both models.
 Each setter sits one operation below its getter, on its own feature — ANC is 13,
 transparency is 12. Sending the right operation to the wrong feature is accepted and
 sets the other thing.
+
+**Engaging ANC clears the transparency flag.** Writing `0x1a04 01` to a device that
+already had ANC on still dropped transparency, so the side effect belongs to the write
+rather than to a change of value.
+
+The coupling runs **one way only**, which is easy to assume symmetric and is not:
+
+| Write | Effect on the other flag |
+|---|---|
+| ANC on | transparency cleared |
+| ANC off | transparency untouched |
+| transparency on | ANC untouched — both then read as on |
+| transparency off | ANC untouched |
+
+Two consequences for anything that writes more than one flag. **Set ANC before
+transparency**, or the second write undoes the first. And a transparency flag that
+already reads as wanted must still be rewritten when an ANC-on write precedes it —
+skipping it yields a sequence that verifies every write it makes and leaves the device
+somewhere else.
 
 ### The three modes are sequences, not commands
 
@@ -348,11 +382,14 @@ Availability is a per-product decision that no read exposes — a device need no
 One byte, in hundredths, matching the read encoding: 0.5 is 50. Confirmed on the
 over-ear model at 0, 40, 50 and 100.
 
-**This write also clears the transparency flag.** Writing the level the device already
-reported moved it out of transparency and into ANC, so the side effect follows the
-write itself, not a change of value. Taken with the two stored levels described under
-`0x1a03`, the command is best read as *set the ANC level*, which necessarily means
-selecting ANC.
+**This write also clears the transparency flag**, the same way `0x1a04 01` does, and
+for what looks like the same reason: it engages ANC. Writing the level the device
+already reported still moved it out of transparency, so the side effect follows the
+write itself, not a change of value.
+
+Taken with the two stored levels described under `0x1a03`, this is *set the ANC level* —
+which necessarily means selecting ANC. It does not touch the transparency level, which
+has its own read at `0x1803` and no setter specified here.
 
 A client changing the level must therefore re-read the flags, not just the level. An
 undo that replays only the field it set will leave the device somewhere it never was.

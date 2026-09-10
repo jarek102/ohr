@@ -80,26 +80,36 @@ The first write ever sent to these devices.
 **Done when:** all three modes can be selected on both models, each confirmed by
 read-back, and the original state restored.
 
-**Outcome:** shipped, with one mode unproven and three findings.
+**Outcome:** shipped, with one mode unproven and four findings.
 
 All three modes were selected and confirmed on the over-ear model, and *ANC* and *Off*
 on the earbuds, each restored afterwards. **Transparency on the earbuds is not proven.**
-The write was acknowledged, the read-back returned *on*, and a second later the same
-read returned *off* and stayed there — with both earbuds charging in their case, which
-may or may not be the reason. Retry with them worn.
+The write was acknowledged, the read-back returned *on*, and a moment later the same
+read returned *off* and stayed there. Retried with one earbud out of its case, which
+the charger read confirmed, and it reverted identically — so the case alone does not
+explain it. Retry with both out and worn.
 
 That is the first finding, and it outranks the milestone: **a confirmed read-back is
 not proof a setting persists.** A device can acknowledge a write, confirm it, and then
 abandon it. Immediate verification proves the command was taken, not kept.
 
-Second: **the level write moves the transparency flag**, even when writing the value
-the device already reported. Third: **`0x1a03` reports the level of whichever path is
-active** — two levels are stored and one read exposes them — so a level is only
-meaningful next to the flags it was read with, and restoring one across a flag change
-writes it into the wrong slot.
+Second, and the one that cost the most: **the flags are coupled, one way.** Engaging
+ANC clears transparency — including when ANC is already on, so the side effect belongs
+to the write. Turning ANC off does not touch it, and neither direction of transparency
+touches ANC. Writing the level does clear it, being ANC engagement by another name.
 
-Together those killed the obvious undo. Putting a device back means reconciling a whole
-snapshot and re-reading between rounds, not replaying the field that was changed.
+Third: **there are two levels, and two reads.** `0x1803` reports the transparency level
+and never moved across a full cycle of the three modes; `0x1a03` follows whichever path
+is active. A reading from the latter means nothing without the flags it was taken with.
+
+Fourth follows from the second, and was found the hard way: **skipping a write for a
+flag that already reads correctly is not safe.** An ANC-on write ahead of it clears the
+flag, so the sequence verifies everything it sends and still ends somewhere else. That
+is exactly what the first restore did.
+
+Together these killed the obvious undo. Putting a device back means reconciling a whole
+snapshot, in an order that respects the coupling, re-reading between rounds — not
+replaying the field that was changed.
 
 ### M4 — Equaliser writes
 
