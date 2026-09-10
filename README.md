@@ -57,6 +57,7 @@ been verified against them. Vectors from more hardware are welcome.
 | [docs/protocol/](docs/protocol/README.md) | The specification |
 | [vectors/](vectors/README.md) | Fixtures, and the provenance rule for adding one |
 | [docs/adr/](docs/adr/README.md) | Why the code is shaped this way |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | What is not built yet, and in what order |
 
 ## Licence
 
