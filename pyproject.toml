@@ -24,15 +24,19 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-# Linux transport backend + the D-Bus mediating service. Not importable, and not
-# required, on other platforms.
-service = [
-    "dbus-next>=0.2.3; sys_platform == 'linux'",
+# Linux transport backend. Device enumeration goes through BlueZ over D-Bus; the
+# RFCOMM socket, SDP resolution and the lease need nothing beyond the standard
+# library. Not required, and not importable, on other platforms.
+linux = [
+    "dbus-python>=1.3; sys_platform == 'linux'",
 ]
 dev = [
     "pytest>=8",
     "jsonschema>=4",
 ]
+
+[project.scripts]
+ohr = "ohr.cli:main"
 
 [project.urls]
 Documentation = "https://github.com/jarek102/ohr/tree/main/docs/protocol"
