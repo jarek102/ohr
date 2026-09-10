@@ -3,24 +3,37 @@
 Two features, not one. ANC is feature 13; transparency (letting outside sound through)
 is feature 12, with its own commands. The user-facing choice between *ANC*,
 *Transparency* and *Off* is a combination of the two, not a single setting — which is
-why writing a mode is a sequence rather than one command.
+why writing a mode is a sequence rather than one command, and why a half-applied
+sequence is a real state rather than a theoretical one.
 
-Reads only. Pure: no I/O.
+The two flags are **not mutually exclusive on the wire**: both have been observed
+enabled at once. Nothing here treats them as a three-valued enum.
+
+Pure: no I/O. Writes are described here and executed by :mod:`ohr.control`, which
+verifies each one by read-back.
 """
 
 from __future__ import annotations
 
+import enum
 from dataclasses import dataclass
 
+from .control import Step
 from .errors import InvalidLength, InvalidValue
 from .frame import Frame, MessageType, VENDOR_SENNHEISER
 
 FEATURE_TRANSPARENT_HEARING = 12
 FEATURE_ANC = 13
 
+OP_SET_SUBMODE = 0
 OP_SUBMODES = 1
+OP_SET_LEVEL = 2
 OP_LEVEL = 3
+OP_SET_ENABLED = 4
 OP_ENABLED = 5
+
+#: Levels travel as a percentage byte, matching the read encoding.
+LEVEL_STEPS = 100
 
 #: Submode identifiers. Availability differs by model.
 SUBMODES: dict[int, str] = {1: "anti_wind", 2: "comfort", 3: "adaptive"}
@@ -101,4 +114,250 @@ def decode_submodes(payload: bytes) -> tuple[Submode, ...]:
     return tuple(
         Submode(payload[i], SUBMODES.get(payload[i]), payload[i + 1])
         for i in range(0, len(payload), 2)
+    )
+
+
+# --- writes -----------------------------------------------------------------
+#
+# Setters reply with an empty acknowledgement carrying no state. Send these through
+# ohr.control.apply rather than directly, so each one is proved by a read.
+
+
+def request_set_enabled(on: bool) -> Frame:
+    """Turn ANC on or off. Payload is one flag byte."""
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_ANC,
+        MessageType.COMMAND,
+        OP_SET_ENABLED,
+        bytes([1 if on else 0]),
+    )
+
+
+def request_set_transparency(on: bool) -> Frame:
+    """Turn transparency on or off. Payload is one flag byte.
+
+    A different feature from ANC, so this neither implies nor cancels the other.
+    """
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_TRANSPARENT_HEARING,
+        MessageType.COMMAND,
+        OP_SET_ENABLED,
+        bytes([1 if on else 0]),
+    )
+
+
+def request_set_level(level: float) -> Frame:
+    """Set the level, as a fraction of full scale. Payload is one percentage byte.
+
+    **This also clears the transparency flag.** Writing the level a device already
+    reported still moved it out of transparency, so the side effect belongs to the
+    write rather than to any change of value: this is the ANC level, and setting it
+    means selecting ANC. A caller must re-read the flags afterwards, not just the
+    level.
+
+    Rejects anything outside 0.0–1.0 rather than clamping: a caller asking for 1.5 has
+    a bug, and silently writing full scale would hide it.
+    """
+    if not 0.0 <= level <= 1.0:
+        raise InvalidValue(f"level must be between 0.0 and 1.0, got {level}")
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_ANC,
+        MessageType.COMMAND,
+        OP_SET_LEVEL,
+        bytes([round(level * LEVEL_STEPS)]),
+    )
+
+
+def request_set_submode(identifier: int, state: int) -> Frame:
+    """Set one submode. Payload is ``(identifier, state)``.
+
+    The accepted range of ``state`` differs per submode and is not advertised by any
+    read, so it is not validated here beyond fitting in a byte. Verify by read-back.
+    """
+    if not 0 <= identifier <= 0xFF:
+        raise InvalidValue(f"submode identifier out of range: {identifier}")
+    if not 0 <= state <= 0xFF:
+        raise InvalidValue(f"submode state out of range: {state}")
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_ANC,
+        MessageType.COMMAND,
+        OP_SET_SUBMODE,
+        bytes([identifier, state]),
+    )
+
+
+# --- the three user-facing modes --------------------------------------------
+
+
+class Mode(enum.Enum):
+    """What a person means by the three-way choice in a noise-control UI.
+
+    This is a **presentation over two independent flags**, not a field on the device.
+    Availability is a per-product decision that no read exposes — in particular a
+    device may not offer *off* — so a mode is attempted and verified, never assumed
+    supported.
+    """
+
+    ANC = "anc"
+    TRANSPARENCY = "transparency"
+    OFF = "off"
+
+
+@dataclass(frozen=True, slots=True)
+class State:
+    """The two flags, as last read.
+
+    ``transparency`` is ``None`` when the device does not implement feature 12 or the
+    read did not answer. That is not the same as off, and the difference changes the
+    plan: a state that is unknown is not turned off on the way past.
+    """
+
+    anc: bool
+    transparency: bool | None = None
+
+    @property
+    def mode(self) -> Mode | None:
+        """Which mode this state presents as, or ``None`` if it presents as neither.
+
+        The precedence — transparency first — is a **rule this library defines**, not
+        something the device reports, because both flags can be set at once and the
+        pair has no ordering of its own. It matches what selecting *Transparency*
+        leaves behind, which is the state a user is most likely looking at.
+        """
+        if self.transparency:
+            return Mode.TRANSPARENCY
+        if self.anc:
+            return Mode.ANC
+        if self.transparency is None:
+            # ANC is off and transparency is unknown, which is not enough to call it
+            # off. Say nothing rather than report a mode that was never read.
+            return None
+        return Mode.OFF
+
+
+def _enabled_step(on: bool) -> Step:
+    return Step(
+        label=f"anc {'on' if on else 'off'}",
+        write=request_set_enabled(on),
+        read=request_enabled(),
+        decode=decode_enabled,
+        expect=on,
+    )
+
+
+def _transparency_step(on: bool) -> Step:
+    return Step(
+        label=f"transparency {'on' if on else 'off'}",
+        write=request_set_transparency(on),
+        read=request_transparency(),
+        decode=decode_transparency,
+        expect=on,
+    )
+
+
+def plan_mode(target: Mode, current: State) -> tuple[Step, ...]:
+    """The writes that select ``target``, given what the device currently reports.
+
+    Order is not arbitrary. Each sequence turns something **off before turning
+    something on**, so that if it stops halfway the device is quieter than intended
+    rather than louder — the safer failure for something worn over the ears.
+
+    Selecting *Transparency* does not clear ANC. That mirrors what the vendor
+    application does, and is consistent with both flags having been observed set at
+    once; clearing it here would be this library inventing behaviour.
+
+    The plan depends on ``current``, so it must be built from a fresh read. Feeding it
+    a stale state produces a sequence that verifies correctly and still leaves the
+    wrong mode selected.
+    """
+    if target is Mode.ANC:
+        steps = []
+        if current.transparency:
+            steps.append(_transparency_step(False))
+        steps.append(_enabled_step(True))
+        return tuple(steps)
+
+    if target is Mode.TRANSPARENCY:
+        return (_transparency_step(True),)
+
+    steps = [_enabled_step(False)]
+    if current.transparency is not None:
+        # Unknown is not off: without a reading there is nothing to verify against.
+        steps.append(_transparency_step(False))
+    return tuple(steps)
+
+
+def plan_state(target: State, current: State) -> tuple[Step, ...]:
+    """The writes that reproduce ``target`` exactly, flag by flag.
+
+    Distinct from :func:`plan_mode`, and the distinction is what makes an undo
+    trustworthy: a mode is a *presentation* of two flags, and more than one flag
+    combination presents as the same mode. Restoring by mode can therefore leave a
+    device in a state it was not in — selecting *Transparency* again does not put ANC
+    back the way it was found.
+
+    Flags already correct produce no write. There is nothing to verify in a change
+    that is not being made, and the read that produced ``current`` is the evidence.
+
+    Everything that must go off goes off first, matching :func:`plan_mode`.
+    """
+    off: list[Step] = []
+    on: list[Step] = []
+    for want, have, step in (
+        (target.anc, current.anc, _enabled_step),
+        (target.transparency, current.transparency, _transparency_step),
+    ):
+        if want is None or want == have:
+            continue
+        (on if want else off).append(step(bool(want)))
+    return (*off, *on)
+
+
+def plan_level(level: float) -> tuple[Step, ...]:
+    """The write that sets the level, with its read-back.
+
+    The read reports hundredths, so a request is compared against the value the device
+    will be able to express rather than against the float as asked.
+
+    Verifies the level only. The same write moves the transparency flag (see
+    :func:`request_set_level`), and that is deliberately left to the caller: a step
+    verifies the setting it asked for, and a plan that quietly restored a flag it had
+    not been asked about would be doing something other than what it says.
+    """
+    return (
+        Step(
+            label=f"level {level:.2f}",
+            write=request_set_level(level),
+            read=request_level(),
+            decode=decode_level,
+            expect=round(level * LEVEL_STEPS) / LEVEL_STEPS,
+        ),
+    )
+
+
+def plan_submode(identifier: int, state: int) -> tuple[Step, ...]:
+    """The write that sets one submode, verified against the full submode list.
+
+    There is no read for a single submode: verification re-reads them all and picks out
+    the one that was written, which also catches a device that moves another submode in
+    response.
+    """
+
+    def just_this_one(payload: bytes) -> int | None:
+        return next(
+            (s.state for s in decode_submodes(payload) if s.id == identifier), None
+        )
+
+    return (
+        Step(
+            label=f"submode {SUBMODES.get(identifier, identifier)} = {state}",
+            write=request_set_submode(identifier, state),
+            read=request_submodes(),
+            decode=just_this_one,
+            expect=state,
+        ),
     )

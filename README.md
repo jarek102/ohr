@@ -9,8 +9,10 @@ Supports:
  - EQ
  - connection managemant
 
-> **Status: pre-alpha.** All reads are implemented and verified against both
-> devices; nothing writes yet. See [the roadmap](docs/ROADMAP.md).
+> **Status: pre-alpha.** All reads are implemented and verified against both devices.
+> Noise control also writes — ANC, transparency and level — each confirmed by reading
+> the setting back. The equaliser and connection management are still read-only. See
+> [the roadmap](docs/ROADMAP.md).
 
 ## What is here
 
@@ -25,8 +27,8 @@ src/ohr/         Python: pure codec, plus the transport and lease interfaces
 
 ## Design in one paragraph
 
-The core is pure: framing and payload codecs, no I/O, no platform imports, no GUI
-toolkit, no dependencies. Everything platform-specific sits behind two interfaces —
+The core is pure: framing, payload codecs and the write path, with no I/O, no platform
+imports, no GUI toolkit and no dependencies. Everything platform-specific sits behind two interfaces —
 [`transport`](src/ohr/transport.py) for the Bluetooth socket and device enumeration,
 [`lease`](src/ohr/lease.py) for control-channel ownership. That boundary is
 [enforced by a test](tests/test_core_is_portable.py), not just documented, because it

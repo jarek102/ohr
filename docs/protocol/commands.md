@@ -6,7 +6,9 @@ Only commands **confirmed against real hardware** are specified here — see
 All values are big-endian. Words are given as the request; the response word is the
 same feature and operation with type 2 (see [framing](framing.md)).
 
-Every command below is a **read**. None of them changes device state.
+Reads are listed first, then writes. **Read [Writes](#writes) before sending one** —
+this protocol acknowledges a setter without reporting state, so the reply to a write is
+not evidence that anything changed.
 
 | Word | Command | Request payload |
 |---|---|---|
@@ -26,6 +28,15 @@ Every command below is a **read**. None of them changes device state.
 | `0x1a01` | Noise-control submodes | empty |
 | `0x1a03` | Level | empty |
 | `0x1a05` | ANC enabled | empty |
+
+Writes:
+
+| Word | Command | Request payload |
+|---|---|---|
+| `0x1804` | Set transparency | flag byte |
+| `0x1a00` | Set submode | identifier, state |
+| `0x1a02` | Set level | percentage byte |
+| `0x1a04` | Set ANC | flag byte |
 
 ## Feature 0 — core
 
@@ -153,8 +164,18 @@ are kept as raw numbers.
 
 Empty payload. Reply is one byte, in hundredths: `0x64` = 1.0.
 
-**Not a proxy for whether noise control is active.** The earbuds reported level 0.0
-while ANC read as enabled; the over-ear model reported 1.0.
+**One command, but not one setting.** The value tracks whichever path is currently
+active. On the over-ear model, with transparency on it read 100; turning transparency
+off — leaving ANC on — dropped the same read to 0; writing 40 and re-enabling
+transparency brought it back to 100. Two levels are stored, and this read exposes only
+the active one.
+
+So a level is meaningful only alongside the flags it was read with. Comparing two
+readings taken under different flags compares two different quantities, and *restoring*
+one across a flag change writes it into the wrong slot.
+
+**Not a proxy for whether noise control is active** either: the earbuds reported 0.0
+while ANC read as enabled, which is simply their ANC level.
 
 ## Features 4 and 8 — equaliser
 
@@ -265,8 +286,87 @@ Real captures of this command are not published, because peer names are the owne
 machine names. The vectors carry the observed byte layout with placeholder names; see
 [`vectors/connections.json`](../../vectors/connections.json).
 
+## Writes
+
+Four writes are specified, all in noise control. Each has been sent to hardware and
+confirmed by reading the setting back.
+
+### The acknowledgement carries no state
+
+A setter replies with an empty acknowledgement. It says the frame was received. It does
+not say the setting changed, and there is no field in it that could. **Every write must
+be verified by a read.**
+
+An error reply is also an answer, and it means the setting is now *unknown* rather than
+unchanged — so read it back after one of those too.
+
+### A read-back is necessary, and not sufficient
+
+The earbuds accepted `0x1804 01`, returned success, and answered the transparency read
+with 1. Within a second the same read returned 0, and it stayed there. Both earbuds
+were charging in their case at the time; whether that is the cause has not been
+established.
+
+A device can therefore acknowledge a write, confirm it, and then abandon it. An
+immediate read-back proves the device took the command; only continued observation
+proves it kept it. Anything showing live state has to keep reading.
+
+### `0x1a04` — set ANC · `0x1804` — set transparency
+
+One flag byte: 0 off, 1 on. Both confirmed on both models.
+
+Each setter sits one operation below its getter, on its own feature — ANC is 13,
+transparency is 12. Sending the right operation to the wrong feature is accepted and
+sets the other thing.
+
+### The three modes are sequences, not commands
+
+There is no mode field. The user-facing choice is a position of two independent flags,
+so selecting one takes up to two writes and can be **partially applied**:
+
+| Mode | Writes |
+|---|---|
+| ANC | transparency off — only if it is on — then ANC on |
+| Transparency | transparency on |
+| Off | ANC off, then transparency off |
+
+Two consequences worth stating plainly:
+
+**Order is part of the specification.** Each sequence clears before it sets, so a
+sequence that stops halfway leaves less processing running rather than two paths at
+once.
+
+**Selecting Transparency does not clear ANC.** Afterwards both flags read as on, which
+is the state the over-ear model was found in. That is the device's behaviour, not an
+omission.
+
+Availability is a per-product decision that no read exposes — a device need not offer
+*off*. Attempt the mode and verify; do not infer support from the feature map.
+
+### `0x1a02` — set level
+
+One byte, in hundredths, matching the read encoding: 0.5 is 50. Confirmed on the
+over-ear model at 0, 40, 50 and 100.
+
+**This write also clears the transparency flag.** Writing the level the device already
+reported moved it out of transparency and into ANC, so the side effect follows the
+write itself, not a change of value. Taken with the two stored levels described under
+`0x1a03`, the command is best read as *set the ANC level*, which necessarily means
+selecting ANC.
+
+A client changing the level must therefore re-read the flags, not just the level. An
+undo that replays only the field it set will leave the device somewhere it never was.
+
+### `0x1a00` — set submode
+
+Identifier then state, the same pairing `0x1a01` returns. Not yet sent to hardware.
+
+There is no read for a single submode: verify by re-reading all of them, which also
+shows whether the device moved another submode in response. Accepted state ranges
+differ per submode and are not advertised by any read.
+
 ## Not yet specified
 
-Writes. Nothing in this specification changes device state, and no write has been sent
-to a device. They will be added the same way the reads were: exercised against
-hardware, captured, and pinned by a vector.
+Writes outside noise control — the equaliser and connection management. They will be
+added the same way these were: exercised against hardware, confirmed by read-back, and
+pinned by a vector.

@@ -2,9 +2,10 @@
 
 Where this is going, in the order it makes sense to get there.
 
-**Today:** the library reads. Every read for status, noise control, the equaliser and
-connections is implemented, confirmed against both models, and specified. Nothing
-writes — no write has ever been sent to hardware.
+**Today:** the library reads everything and writes noise control. Every read for status,
+noise control, the equaliser and connections is implemented, confirmed against both
+models, and specified. Noise-control writes — ANC, transparency, level — are confirmed
+by read-back on hardware. The equaliser and connection management are still read-only.
 
 ## At a glance
 
@@ -13,12 +14,12 @@ writes — no write has ever been sent to hardware.
 | **M0** | Specification, vectors, pure Python codec | **shipped** · 2026-09-09 |
 | **M1** | Reach the hardware — read a battery level from a real headset | **shipped** · 2026-09-09 |
 | **M2** | Complete the read surface — status, ANC, equaliser, connections | **shipped** · 2026-09-09 |
-| **M3** | ANC writes — switch between ANC, Transparency and Off | not started · next |
-| **M4** | Equaliser writes — band gains, bass boost, presets | not started · after M3 |
+| **M3** | ANC writes — switch between ANC, Transparency and Off | **shipped** · 2026-09-10 |
+| **M4** | Equaliser writes — band gains, bass boost, presets | not started · next |
 | **M5** | Adwaita application: status | not started · after M2 |
 | **M6** | Adwaita application: control | not started · after M3, M4, M5 |
 | **M7** | Connection management — see and change who holds the headset | not started · after M3 |
-| **M8** | Live state — stay correct when something else changes it | not started · after M2 |
+| **M8** | Live state — stay correct when something else changes it | not started · after M2, and now load-bearing |
 | **W1** | A C# codec passing the same vectors | not started · after M2 |
 | **W2** | WinRT transport and a WinUI 3 application | not started · after W1, M3 |
 
@@ -79,6 +80,27 @@ The first write ever sent to these devices.
 **Done when:** all three modes can be selected on both models, each confirmed by
 read-back, and the original state restored.
 
+**Outcome:** shipped, with one mode unproven and three findings.
+
+All three modes were selected and confirmed on the over-ear model, and *ANC* and *Off*
+on the earbuds, each restored afterwards. **Transparency on the earbuds is not proven.**
+The write was acknowledged, the read-back returned *on*, and a second later the same
+read returned *off* and stayed there — with both earbuds charging in their case, which
+may or may not be the reason. Retry with them worn.
+
+That is the first finding, and it outranks the milestone: **a confirmed read-back is
+not proof a setting persists.** A device can acknowledge a write, confirm it, and then
+abandon it. Immediate verification proves the command was taken, not kept.
+
+Second: **the level write moves the transparency flag**, even when writing the value
+the device already reported. Third: **`0x1a03` reports the level of whichever path is
+active** — two levels are stored and one read exposes them — so a level is only
+meaningful next to the flags it was read with, and restoring one across a flag change
+writes it into the wrong slot.
+
+Together those killed the obvious undo. Putting a device back means reconciling a whole
+snapshot and re-reading between rounds, not replaying the field that was changed.
+
 ### M4 — Equaliser writes
 
 **Goal:** set band gains and bass boost.
@@ -135,6 +157,10 @@ case proven safe.
 
 **Done when:** a change made from another controller appears without a manual refresh,
 and two consumers run simultaneously without contending.
+
+M3 raised this milestone's importance. A device was seen to accept a setting, confirm
+it, and drop it a second later on its own — no other controller involved. Any surface
+that stops reading after a write can show a state the device is not in.
 
 ## Windows
 

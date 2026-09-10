@@ -92,7 +92,8 @@
           "enum": [
             "frame",
             "stream",
-            "payload"
+            "payload",
+            "sequence"
           ]
         },
         "provenance": {
@@ -259,6 +260,56 @@
                 ]
               }
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "sequence"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sequence",
+              "given",
+              "writes",
+              "verify"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": true,
+              "kind": true,
+              "provenance": true,
+              "sequence": {
+                "enum": [
+                  "anc_mode",
+                  "anc_state",
+                  "anc_level",
+                  "anc_submode"
+                ],
+                "description": "Which planner produces this sequence."
+              },
+              "given": {
+                "type": "object",
+                "description": "The inputs the plan is built from. A plan depends on current device state, so it cannot be pinned without one."
+              },
+              "writes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/hex"
+                },
+                "description": "Complete frames to send, in order. Order is part of the contract, not an implementation detail."
+              },
+              "verify": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/hex"
+                },
+                "description": "The read that proves each write, positionally matched to 'writes'. A setter acknowledges without reporting state, so a sequence without these is unverifiable."
+              }
+            }
           }
         }
       ]

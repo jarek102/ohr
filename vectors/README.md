@@ -13,8 +13,11 @@ and a second implementation with no shared fixtures will drift silently.
 | File | Covers |
 |---|---|
 | [framing.json](framing.json) | Frame encode/decode and stream reassembly |
-| [battery.json](battery.json) | Battery level payload decode, both shapes |
+| [battery.json](battery.json) | Battery level, types and charger |
 | [features.json](features.json) | Feature-list payload decode |
+| [anc.json](anc.json) | Noise control: reads, writes, and the mode sequences |
+| [equaliser.json](equaliser.json) | Mode, configuration, band gain, bass boost |
+| [connections.json](connections.json) | Peer count, peer details, own index, maximum |
 
 Each file is `{"version": 1, "vectors": [...]}` and validates against
 [schema.json](schema.json).
@@ -30,6 +33,16 @@ and leading garbage. A read is not a frame; these prove an implementation knows 
 
 **`payload`** — a payload body and its decoded meaning, for one named command. No
 framing involved.
+
+**`sequence`** — the writes a named plan produces from a given starting state, in
+order, each paired with the read that proves it.
+
+That last kind exists because a user-facing setting is not always one command. A setter
+here acknowledges without reporting state, so *which* read verifies *which* write is
+part of the protocol rather than a detail of any one implementation — and so is the
+order, since a sequence that stops halfway leaves the device somewhere real. A vector
+that pinned only the bytes would let a second implementation send them in an order that
+fails differently.
 
 ## Provenance — read this before adding a vector
 

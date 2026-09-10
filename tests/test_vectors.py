@@ -37,9 +37,14 @@ def ids(vectors: list[dict]) -> list[str]:
 
 
 # --- framing ----------------------------------------------------------------
+#
+# Frame vectors are collected from every file, not just framing.json: a write is
+# pinned as complete frame bytes, and those belong beside the feature they set.
 
-FRAMES = [v for v in load("framing.json") if v["kind"] == "frame"]
-STREAMS = [v for v in load("framing.json") if v["kind"] == "stream"]
+ALL = [v for name in ALL_FILES for v in load(name)]
+
+FRAMES = [v for v in ALL if v["kind"] == "frame"]
+STREAMS = [v for v in ALL if v["kind"] == "stream"]
 
 
 @pytest.mark.parametrize("vec", FRAMES, ids=ids(FRAMES))
@@ -129,7 +134,7 @@ COMMANDS = {
     ),
 }
 
-PAYLOADS = [v for name in PAYLOAD_FILES for v in load(name)]
+PAYLOADS = [v for v in ALL if v["kind"] == "payload"]
 
 
 def _same(got: object, want: object, path: str = "") -> None:
@@ -162,6 +167,50 @@ def test_payload(vec: dict) -> None:
     got = as_data(decode(payload))
     # A vector need only pin the fields it cares about.
     _same({k: got[k] for k in want}, want, vec["command"])
+
+
+# --- sequences --------------------------------------------------------------
+#
+# A user-facing setting is not always one command. These pin the whole plan: which
+# frames, in which order, and the read that proves each one.
+
+
+def _frames(plan) -> tuple[list[str], list[str]]:
+    return (
+        [step.write.to_bytes().hex() for step in plan],
+        [step.read.to_bytes().hex() for step in plan],
+    )
+
+
+SEQUENCES = {
+    "anc_mode": lambda g: _frames(
+        anc.plan_mode(anc.Mode(g["target"]), anc.State(g["anc"], g["transparency"]))
+    ),
+    "anc_state": lambda g: _frames(
+        anc.plan_state(
+            anc.State(**g["target"]), anc.State(**g["current"])
+        )
+    ),
+    "anc_level": lambda g: _frames(anc.plan_level(g["level"])),
+    "anc_submode": lambda g: _frames(anc.plan_submode(g["identifier"], g["state"])),
+}
+
+SEQUENCE_VECTORS = [v for v in ALL if v["kind"] == "sequence"]
+
+
+@pytest.mark.parametrize("vec", SEQUENCE_VECTORS, ids=ids(SEQUENCE_VECTORS))
+def test_sequence(vec: dict) -> None:
+    writes, verify = SEQUENCES[vec["sequence"]](vec["given"])
+    assert writes == vec["writes"], "wrong writes, or wrong order"
+    assert verify == vec["verify"], "each write must be proved by the right read"
+
+
+def test_every_sequence_is_exercised() -> None:
+    covered = {v["sequence"] for v in SEQUENCE_VECTORS}
+    assert covered == set(SEQUENCES), (
+        f"no vectors for {set(SEQUENCES) - covered}, "
+        f"no planner for {covered - set(SEQUENCES)}"
+    )
 
 
 def test_every_command_is_exercised() -> None:

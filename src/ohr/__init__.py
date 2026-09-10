@@ -24,7 +24,10 @@ Typical read::
 
 Writes are a different matter. No write in this protocol returns a meaningful
 acknowledgement — setters reply with an empty acknowledgement that carries no state —
-so a successful write is not evidence that anything changed. Read back.
+so a successful write is not evidence that anything changed. Send them through
+:mod:`ohr.control`, which pairs each with the read that proves it, and note that even a
+confirmed read-back has been seen not to persist: a device can accept a setting and
+abandon it a second later.
 """
 
 from __future__ import annotations

@@ -6,7 +6,9 @@
       "kind": "payload",
       "command": "anc_enabled",
       "payload": "01",
-      "decoded": { "enabled": true },
+      "decoded": {
+        "enabled": true
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -18,7 +20,9 @@
       "kind": "payload",
       "command": "anc_enabled",
       "payload": "01",
-      "decoded": { "enabled": true },
+      "decoded": {
+        "enabled": true
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -30,7 +34,9 @@
       "kind": "payload",
       "command": "anc_enabled",
       "payload": "00",
-      "decoded": { "enabled": false },
+      "decoded": {
+        "enabled": false
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Both devices happened to have ANC on when captured. The off value is required by the specification and is pinned so a decoder cannot pass by returning true unconditionally."
@@ -52,7 +58,9 @@
       "kind": "payload",
       "command": "anc_transparency",
       "payload": "01",
-      "decoded": { "enabled": true },
+      "decoded": {
+        "enabled": true
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -65,7 +73,9 @@
       "kind": "payload",
       "command": "anc_transparency",
       "payload": "00",
-      "decoded": { "enabled": false },
+      "decoded": {
+        "enabled": false
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -80,9 +90,21 @@
       "payload": "010102000300",
       "decoded": {
         "submodes": [
-          { "id": 1, "name": "anti_wind", "state": 1 },
-          { "id": 2, "name": "comfort", "state": 0 },
-          { "id": 3, "name": "adaptive", "state": 0 }
+          {
+            "id": 1,
+            "name": "anti_wind",
+            "state": 1
+          },
+          {
+            "id": 2,
+            "name": "comfort",
+            "state": 0
+          },
+          {
+            "id": 3,
+            "name": "adaptive",
+            "state": 0
+          }
         ]
       },
       "provenance": {
@@ -110,8 +132,16 @@
       "payload": "0101f002",
       "decoded": {
         "submodes": [
-          { "id": 1, "name": "anti_wind", "state": 1 },
-          { "id": 240, "name": null, "state": 2 }
+          {
+            "id": 1,
+            "name": "anti_wind",
+            "state": 1
+          },
+          {
+            "id": 240,
+            "name": null,
+            "state": 2
+          }
         ]
       },
       "provenance": {
@@ -124,7 +154,9 @@
       "kind": "payload",
       "command": "anc_submodes",
       "payload": "",
-      "decoded": { "submodes": [] },
+      "decoded": {
+        "submodes": []
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Zero pairs is a valid answer — a device with no submodes — and is not an error."
@@ -135,7 +167,9 @@
       "kind": "payload",
       "command": "anc_level",
       "payload": "64",
-      "decoded": { "level": 1.0 },
+      "decoded": {
+        "level": 1.0
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -147,12 +181,356 @@
       "kind": "payload",
       "command": "anc_level",
       "payload": "00",
-      "decoded": { "level": 0.0 },
+      "decoded": {
+        "level": 0.0
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
         "date": "2026-09-09",
         "note": "Zero while ANC read as on, so this value is not a proxy for whether ANC is active."
+      }
+    },
+    {
+      "id": "write-anc-on",
+      "kind": "frame",
+      "bytes": "ff03000104951a0401",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "command",
+      "operation": 4,
+      "payload": "01",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Sent to both models; the enabled read returned 1 afterwards on each."
+      }
+    },
+    {
+      "id": "write-anc-off",
+      "kind": "frame",
+      "bytes": "ff03000104951a0400",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "command",
+      "operation": 4,
+      "payload": "00",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Sent to both models; the enabled read returned 0 afterwards on each."
+      }
+    },
+    {
+      "id": "write-transparency-on",
+      "kind": "frame",
+      "bytes": "ff0300010495180401",
+      "vendor": 1173,
+      "feature": 12,
+      "type": "command",
+      "operation": 4,
+      "payload": "01",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Accepted by both models. It persisted on the over-ear model; on the earbuds it read back as set and then reverted within a second, with both buds charging in the case. See docs/protocol/commands.md."
+      }
+    },
+    {
+      "id": "write-transparency-off",
+      "kind": "frame",
+      "bytes": "ff0300010495180400",
+      "vendor": 1173,
+      "feature": 12,
+      "type": "command",
+      "operation": 4,
+      "payload": "00",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Sent to both models; the transparency read returned 0 afterwards on each."
+      }
+    },
+    {
+      "id": "write-level-half",
+      "kind": "frame",
+      "bytes": "ff03000104951a0232",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "command",
+      "operation": 2,
+      "payload": "32",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "The level read returned 50 afterwards. Writing this also cleared the transparency flag; see docs/protocol/commands.md."
+      }
+    },
+    {
+      "id": "write-level-full",
+      "kind": "frame",
+      "bytes": "ff03000104951a0264",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "command",
+      "operation": 2,
+      "payload": "64",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "The level read returned 100 afterwards."
+      }
+    },
+    {
+      "id": "write-submode-adaptive-on",
+      "kind": "frame",
+      "bytes": "ff03000204951a000301",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "command",
+      "operation": 0,
+      "payload": "0301",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "A submode write is an identifier and a state, in that order — the same pairing the submode read returns."
+      }
+    },
+    {
+      "id": "mode-anc-from-transparency",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "anc",
+        "anc": false,
+        "transparency": true
+      },
+      "writes": [
+        "ff0300010495180400",
+        "ff03000104951a0401"
+      ],
+      "verify": [
+        "ff03000004951805",
+        "ff03000004951a05"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Both writes acknowledged and confirmed by read-back; the device presented ANC afterwards and the original state was restored."
+      }
+    },
+    {
+      "id": "mode-anc-from-off",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "anc",
+        "anc": false,
+        "transparency": false
+      },
+      "writes": [
+        "ff03000104951a0401"
+      ],
+      "verify": [
+        "ff03000004951a05"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "One write, confirmed by read-back, and stable across six seconds of polling."
+      }
+    },
+    {
+      "id": "mode-transparency-does-not-clear-anc",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "transparency",
+        "anc": true,
+        "transparency": false
+      },
+      "writes": [
+        "ff0300010495180401"
+      ],
+      "verify": [
+        "ff03000004951805"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "ANC remained set afterwards, exactly as the sequence intends: both flags read as on together."
+      }
+    },
+    {
+      "id": "mode-off-clears-both",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "off",
+        "anc": true,
+        "transparency": true
+      },
+      "writes": [
+        "ff03000104951a0400",
+        "ff0300010495180400"
+      ],
+      "verify": [
+        "ff03000004951a05",
+        "ff03000004951805"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Both writes confirmed by read-back. Also run on the earbuds, where the resulting state held across six seconds of polling."
+      }
+    },
+    {
+      "id": "mode-off-without-transparency-support",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "off",
+        "anc": true,
+        "transparency": null
+      },
+      "writes": [
+        "ff03000104951a0400"
+      ],
+      "verify": [
+        "ff03000004951a05"
+      ],
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An unknown transparency state is not an off one. Without a reading there is nothing to verify a write against, so the plan does not touch it — writing blindly would report success for a change no read ever confirmed."
+      }
+    },
+    {
+      "id": "restore-both-flags-not-the-mode",
+      "kind": "sequence",
+      "sequence": "anc_state",
+      "given": {
+        "target": {
+          "anc": true,
+          "transparency": true
+        },
+        "current": {
+          "anc": false,
+          "transparency": false
+        }
+      },
+      "writes": [
+        "ff03000104951a0401",
+        "ff0300010495180401"
+      ],
+      "verify": [
+        "ff03000004951a05",
+        "ff03000004951805"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Used to undo an off sequence: both flags were put back and confirmed, returning the device to the state it was found in."
+      }
+    },
+    {
+      "id": "restore-writes-nothing-for-a-flag-already-correct",
+      "kind": "sequence",
+      "sequence": "anc_state",
+      "given": {
+        "target": {
+          "anc": true,
+          "transparency": false
+        },
+        "current": {
+          "anc": true,
+          "transparency": true
+        }
+      },
+      "writes": [
+        "ff0300010495180400"
+      ],
+      "verify": [
+        "ff03000004951805"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Used to undo a level write, which had cleared transparency as a side effect. ANC was already correct and was not written."
+      }
+    },
+    {
+      "id": "restore-clears-before-it-sets",
+      "kind": "sequence",
+      "sequence": "anc_state",
+      "given": {
+        "target": {
+          "anc": true,
+          "transparency": false
+        },
+        "current": {
+          "anc": false,
+          "transparency": true
+        }
+      },
+      "writes": [
+        "ff0300010495180400",
+        "ff03000104951a0401"
+      ],
+      "verify": [
+        "ff03000004951805",
+        "ff03000004951a05"
+      ],
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Same ordering rule as a mode change: what is going off goes off first, so a sequence that stops halfway leaves less processing running rather than two paths at once."
+      }
+    },
+    {
+      "id": "level-half-verified-by-the-level-read",
+      "kind": "sequence",
+      "sequence": "anc_level",
+      "given": {
+        "level": 0.5
+      },
+      "writes": [
+        "ff03000104951a0232"
+      ],
+      "verify": [
+        "ff03000004951a03"
+      ],
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The setter and the getter are adjacent operations and easy to transpose. Sending the getter's operation with a payload would be a plausible-looking write that changes nothing."
+      }
+    },
+    {
+      "id": "submode-verified-by-reading-all-submodes",
+      "kind": "sequence",
+      "sequence": "anc_submode",
+      "given": {
+        "identifier": 3,
+        "state": 1
+      },
+      "writes": [
+        "ff03000204951a000301"
+      ],
+      "verify": [
+        "ff03000004951a01"
+      ],
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "There is no read for a single submode. Verification re-reads the whole list, which also shows whether the device moved a different submode in response."
       }
     }
   ]
