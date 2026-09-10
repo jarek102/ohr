@@ -54,6 +54,12 @@ observations that firmware can invalidate.
 **8. Smallest slice that proves the shape, then stop.** Prefer a reviewable step over a
 complete one.
 
+**9. Say what is true and stop there.** A command that is not specified is simply not
+listed — "not yet confirmed against hardware" is the entire explanation any reader
+needs. Documentation here carries no legal notices, no hedging preambles, and no
+commentary about what it leaves out. If something is missing, add it once a device has
+demonstrated it; do not write a paragraph about its absence.
+
 ## Adding to the specification
 
 1. Exercise the command against a device and capture the exact bytes.
