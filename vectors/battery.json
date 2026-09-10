@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "scalar-70",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "46",
+      "decoded": { "shape": "scalar", "level": 0.7 },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "scalar-90",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "5a",
+      "decoded": { "shape": "scalar", "level": 0.9 },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-06"
+      }
+    },
+    {
+      "id": "triplet-right-unavailable",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "50ff32",
+      "decoded": { "shape": "triplet", "left": 0.8, "right": null, "case": 0.5 },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-07",
+        "note": "One earbud was out of use. 0xff means unavailable in this shape; it is not a level."
+      }
+    },
+    {
+      "id": "triplet-all-present",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "50503c",
+      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.8, "case": 0.6 },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-06"
+      }
+    },
+    {
+      "id": "triplet-asymmetric",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "50323c",
+      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.5, "case": 0.6 },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-07",
+        "note": "The two earbuds drain independently; they are not expected to match."
+      }
+    },
+    {
+      "id": "triplet-later-read",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "503232",
+      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.5, "case": 0.5 },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "scalar-ff-is-not-unavailable",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "ff",
+      "decoded": { "shape": "scalar", "level": 2.55 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The single-byte shape has no 0xff special case, unlike the triplet. 0xff decodes as 255/100. This asymmetry is the most likely source of a wrong reading, so it is pinned rather than left implicit. A decoder that returns null here is wrong; one that clamps to 1.0 is also wrong."
+      }
+    },
+    {
+      "id": "triplet-all-unavailable",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "ffffff",
+      "decoded": { "shape": "triplet", "left": null, "right": null, "case": null },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Every field may be unavailable at once."
+      }
+    },
+    {
+      "id": "triplet-ignores-extra-bytes",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "50503c00",
+      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.8, "case": 0.6 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Bytes beyond the third are not consumed. A field ignored here is not proven to be padding — do not assign it a meaning."
+      }
+    },
+    {
+      "id": "zero-level",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "00",
+      "decoded": { "shape": "scalar", "level": 0.0 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Lower bound. Distinct from unavailable."
+      }
+    },
+    {
+      "id": "full-level",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "64",
+      "decoded": { "shape": "scalar", "level": 1.0 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "0x64 = 100 = full. No clamp is applied above this."
+      }
+    },
+    {
+      "id": "empty-payload-is-invalid",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Length zero is neither shape and must be rejected, not defaulted to zero."
+      }
+    },
+    {
+      "id": "two-bytes-is-invalid",
+      "kind": "payload",
+      "command": "battery_level",
+      "payload": "5050",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Two bytes is neither the scalar nor the triplet shape. Rejecting it prevents a truncated triplet being read as a scalar."
+      }
+    },
+    {
+      "id": "types-over-ear",
+      "kind": "payload",
+      "command": "battery_types",
+      "payload": "01ff",
+      "decoded": { "first": "vdl", "second": "invalid" },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-07",
+        "note": "Hardware type identifiers. These are not charge levels and not a left/right/case descriptor."
+      }
+    },
+    {
+      "id": "types-earbuds",
+      "kind": "payload",
+      "command": "battery_types",
+      "payload": "05ff",
+      "decoded": { "first": "mbt", "second": "invalid" },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "types-single-byte-is-invalid",
+      "kind": "payload",
+      "command": "battery_types",
+      "payload": "01",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Two independently decoded bytes are required."
+      }
+    }
+  ]
+}

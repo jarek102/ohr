@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "feature-list-over-ear",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "00090108060c010302040202010a0214010d010004",
+      "decoded": {
+        "more": false,
+        "features": [
+          { "id": 9, "name": "versions", "version": 1 },
+          { "id": 8, "name": "user_eq", "version": 6 },
+          { "id": 12, "name": "transparent_hearing", "version": 1 },
+          { "id": 3, "name": "power", "version": 2 },
+          { "id": 4, "name": "generic_audio", "version": 2 },
+          { "id": 2, "name": "device", "version": 1 },
+          { "id": 10, "name": "device_management", "version": 2 },
+          { "id": 20, "name": "local_name", "version": 1 },
+          { "id": 13, "name": "anc", "version": 1 },
+          { "id": 0, "name": "core", "version": 4 }
+        ]
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-08",
+        "note": "device_management is version 2, below the version-4 threshold, so this device uses index-based connection commands."
+      }
+    },
+    {
+      "id": "feature-list-earbuds",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "00090108040e010c010302100204040f01160102010a0314010b0215010d010005",
+      "decoded": {
+        "more": false,
+        "features": [
+          { "id": 9, "name": "versions", "version": 1 },
+          { "id": 8, "name": "user_eq", "version": 4 },
+          { "id": 14, "name": "tws", "version": 1 },
+          { "id": 12, "name": "transparent_hearing", "version": 1 },
+          { "id": 3, "name": "power", "version": 2 },
+          { "id": 16, "name": "personalized_sound", "version": 2 },
+          { "id": 4, "name": "generic_audio", "version": 4 },
+          { "id": 15, "name": "fitting_test", "version": 1 },
+          { "id": 22, "name": "find_device", "version": 1 },
+          { "id": 2, "name": "device", "version": 1 },
+          { "id": 10, "name": "device_management", "version": 3 },
+          { "id": 20, "name": "local_name", "version": 1 },
+          { "id": 11, "name": "mmi_config", "version": 2 },
+          { "id": 21, "name": "auracast", "version": 1 },
+          { "id": 13, "name": "anc", "version": 1 },
+          { "id": 0, "name": "core", "version": 5 }
+        ]
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-08",
+        "note": "device_management is version 3, still below 4, so this device also uses index-based connection commands."
+      }
+    },
+    {
+      "id": "empty-payload",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "",
+      "decoded": { "more": false, "features": [] },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An empty payload is valid and means no continuation and no features — not an error, and not an absent reply."
+      }
+    },
+    {
+      "id": "continuation-flag-set",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "01000403020a02",
+      "decoded": {
+        "more": true,
+        "features": [
+          { "id": 0, "name": "core", "version": 4 },
+          { "id": 3, "name": "power", "version": 2 },
+          { "id": 10, "name": "device_management", "version": 2 }
+        ]
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Neither device set the flag, so no capture exists. When it is set, a second request must be issued and the maps merged; a client that stops here gets a partial map and can pick the wrong connection command family."
+      }
+    },
+    {
+      "id": "flag-byte-is-equality-not-truthiness",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "02000403020a02",
+      "decoded": {
+        "more": false,
+        "features": [
+          { "id": 0, "name": "core", "version": 4 },
+          { "id": 3, "name": "power", "version": 2 },
+          { "id": 10, "name": "device_management", "version": 2 }
+        ]
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The flag is true only when the byte equals 1, not merely non-zero. Pinned because a truthiness test would silently issue a spurious continuation request."
+      }
+    },
+    {
+      "id": "unpaired-trailing-byte-ignored",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "00000403020a",
+      "decoded": {
+        "more": false,
+        "features": [
+          { "id": 0, "name": "core", "version": 4 },
+          { "id": 3, "name": "power", "version": 2 }
+        ]
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An odd number of body bytes leaves a trailing id with no version. It is dropped, not treated as version zero and not an error."
+      }
+    },
+    {
+      "id": "unknown-feature-id-retained",
+      "kind": "payload",
+      "command": "feature_list",
+      "payload": "000004f003",
+      "decoded": {
+        "more": false,
+        "features": [
+          { "id": 0, "name": "core", "version": 4 },
+          { "id": 240, "name": null, "version": 3 }
+        ]
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An unrecognised feature id must be kept with its version and a null name, not dropped. Future firmware will add ids this table does not know, and discarding them would silently understate what a device supports."
+      }
+    }
+  ]
+}

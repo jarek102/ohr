@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "battery-level-request",
+      "kind": "frame",
+      "bytes": "ff03000004950603",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "command",
+      "operation": 3,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-07",
+        "note": "Sent; a valid response followed."
+      }
+    },
+    {
+      "id": "battery-level-response-scalar",
+      "kind": "frame",
+      "bytes": "ff0300010495070346",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "response",
+      "operation": 3,
+      "payload": "46",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "battery-level-response-triplet",
+      "kind": "frame",
+      "bytes": "ff0300030495070350ff32",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "response",
+      "operation": 3,
+      "payload": "50ff32",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "battery-types-request",
+      "kind": "frame",
+      "bytes": "ff0300000495060e",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "command",
+      "operation": 14,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "battery-types-response",
+      "kind": "frame",
+      "bytes": "ff0300020495070e05ff",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "response",
+      "operation": 14,
+      "payload": "05ff",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-07"
+      }
+    },
+    {
+      "id": "feature-list-request",
+      "kind": "frame",
+      "bytes": "ff03000004950001",
+      "vendor": 1173,
+      "feature": 0,
+      "type": "command",
+      "operation": 1,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-08"
+      }
+    },
+    {
+      "id": "feature-list-response-over-ear",
+      "kind": "frame",
+      "bytes": "ff0300150495010100090108060c010302040202010a0214010d010004",
+      "vendor": 1173,
+      "feature": 0,
+      "type": "response",
+      "operation": 1,
+      "payload": "00090108060c010302040202010a0214010d010004",
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-08"
+      }
+    },
+    {
+      "id": "feature-list-response-earbuds",
+      "kind": "frame",
+      "bytes": "ff0300210495010100090108040e010c010302100204040f01160102010a0314010b0215010d010005",
+      "vendor": 1173,
+      "feature": 0,
+      "type": "response",
+      "operation": 1,
+      "payload": "00090108040e010c010302100204040f01160102010a0314010b0215010d010005",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-08"
+      }
+    },
+    {
+      "id": "error-type-encoding",
+      "kind": "frame",
+      "bytes": "ff030001049507835a",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "error",
+      "operation": 3,
+      "payload": "5a",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "No error frame has been captured. This pins the type-3 bit position against the same feature/operation as the observed response, so an implementation cannot silently treat an error as a response."
+      }
+    },
+    {
+      "id": "notification-type-encoding",
+      "kind": "frame",
+      "bytes": "ff030003049506835a5a5a",
+      "vendor": 1173,
+      "feature": 3,
+      "type": "notification",
+      "operation": 3,
+      "payload": "5a5a5a",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Pins type 1. Battery level notifications are documented but none has been captured, because subscribing mutates session state and has not been exercised."
+      }
+    },
+    {
+      "id": "stream-single-frame",
+      "kind": "stream",
+      "chunks": ["ff0300010495070346"],
+      "frames": ["ff0300010495070346"],
+      "remainder": "",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Baseline: one complete frame in one read."
+      }
+    },
+    {
+      "id": "stream-split-mid-header",
+      "kind": "stream",
+      "chunks": ["ff0300", "010495070346"],
+      "frames": ["ff0300010495070346"],
+      "remainder": "",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "A read can end inside the header, before the length field is complete. An implementation that assumes eight bytes are always available will fail here."
+      }
+    },
+    {
+      "id": "stream-split-mid-payload",
+      "kind": "stream",
+      "chunks": ["ff03000304950703", "50ff", "32"],
+      "frames": ["ff0300030495070350ff32"],
+      "remainder": "",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Header complete, payload arriving across two further reads."
+      }
+    },
+    {
+      "id": "stream-two-frames-one-read",
+      "kind": "stream",
+      "chunks": ["ff0300010495070346ff0300020495070e01ff"],
+      "frames": ["ff0300010495070346", "ff0300020495070e01ff"],
+      "remainder": "",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Several frames can arrive in one read; a notification may sit between a request and its response."
+      }
+    },
+    {
+      "id": "stream-trailing-partial",
+      "kind": "stream",
+      "chunks": ["ff0300010495070346ff030002"],
+      "frames": ["ff0300010495070346"],
+      "remainder": "ff030002",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "A complete frame followed by the start of another. The partial tail must be retained, not discarded."
+      }
+    },
+    {
+      "id": "stream-leading-garbage",
+      "kind": "stream",
+      "chunks": ["00112233ff0300010495070346"],
+      "frames": ["ff0300010495070346"],
+      "remainder": "",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Resynchronise on the ff03 start marker rather than assuming the buffer begins on a frame boundary."
+      }
+    },
+    {
+      "id": "stream-empty",
+      "kind": "stream",
+      "chunks": [],
+      "frames": [],
+      "remainder": "",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Degenerate case; must not raise."
+      }
+    }
+  ]
+}
