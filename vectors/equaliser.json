@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "mode-off",
+      "kind": "payload",
+      "command": "eq_mode",
+      "payload": "0000",
+      "decoded": { "value": 0, "name": "off" },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Identical bytes from the earbuds the same day. A second byte follows the mode; its meaning is not established, and it is not consumed."
+      }
+    },
+    {
+      "id": "mode-user-eq",
+      "kind": "payload",
+      "command": "eq_mode",
+      "payload": "01",
+      "decoded": { "value": 1, "name": "user_eq" },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Both devices had the equaliser off when captured. Pins the value that band gains depend on."
+      }
+    },
+    {
+      "id": "mode-unknown-value-kept",
+      "kind": "payload",
+      "command": "eq_mode",
+      "payload": "7f",
+      "decoded": { "value": 127, "name": null },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An unrecognised mode keeps its numeric value with a null name rather than raising; the set of processing chains varies by model."
+      }
+    },
+    {
+      "id": "configuration-five-bands",
+      "kind": "payload",
+      "command": "eq_configuration",
+      "payload": "05c43c0000",
+      "decoded": {
+        "bands": 5,
+        "gain_min_db": -6.0,
+        "gain_max_db": 6.0,
+        "trailing": "0000"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Identical bytes from the earbuds the same day. The two trailing bytes are retained rather than interpreted — nothing establishes them as padding."
+      }
+    },
+    {
+      "id": "configuration-truncated",
+      "kind": "payload",
+      "command": "eq_configuration",
+      "payload": "05c4",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Fewer than three bytes cannot carry a band count and both limits."
+      }
+    },
+    {
+      "id": "band-gain-flat",
+      "kind": "payload",
+      "command": "eq_band_gain",
+      "payload": "00",
+      "decoded": { "gain_db": 0.0 },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "All five bands read as zero on both devices, the equaliser being off."
+      }
+    },
+    {
+      "id": "band-gain-positive",
+      "kind": "payload",
+      "command": "eq_band_gain",
+      "payload": "1e",
+      "decoded": { "gain_db": 3.0 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Pins the tenths-of-a-decibel scale. A decoder treating the byte as whole decibels would report 30 dB here."
+      }
+    },
+    {
+      "id": "band-gain-negative",
+      "kind": "payload",
+      "command": "eq_band_gain",
+      "payload": "c4",
+      "decoded": { "gain_db": -6.0 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The byte is signed. A decoder reading it as unsigned would report +19.6 dB — above the maximum the same device advertises."
+      }
+    },
+    {
+      "id": "band-gain-minus-one-tenth",
+      "kind": "payload",
+      "command": "eq_band_gain",
+      "payload": "ff",
+      "decoded": { "gain_db": -0.1 },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "0xff is the smallest negative step, not an unavailable sentinel. Unlike the battery triplet, this field has no such sentinel."
+      }
+    },
+    {
+      "id": "bass-boost-off",
+      "kind": "payload",
+      "command": "eq_bass_boost",
+      "payload": "00",
+      "decoded": { "enabled": false },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-09",
+        "note": "Identical bytes from the over-ear model the same day."
+      }
+    },
+    {
+      "id": "bass-boost-on",
+      "kind": "payload",
+      "command": "eq_bass_boost",
+      "payload": "01",
+      "decoded": { "enabled": true },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Both devices had it off when captured."
+      }
+    }
+  ]
+}

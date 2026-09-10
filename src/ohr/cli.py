@@ -80,6 +80,100 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _probe_plan() -> list[tuple[str, object, object]]:
+    """Every read this library knows, as (label, request, decoder)."""
+    from . import anc, connections, equaliser
+
+    return [
+        ("battery.level", battery.request_level(), battery.decode_level),
+        ("battery.types", battery.request_types(), battery.decode_types),
+        ("battery.charger", battery.request_charger(), battery.decode_charger),
+        ("anc.enabled", anc.request_enabled(), anc.decode_enabled),
+        ("anc.transparency", anc.request_transparency(), anc.decode_transparency),
+        ("anc.submodes", anc.request_submodes(), anc.decode_submodes),
+        ("anc.level", anc.request_level(), anc.decode_level),
+        ("eq.mode", equaliser.request_mode(), equaliser.decode_mode),
+        ("eq.configuration", equaliser.request_configuration(), equaliser.decode_configuration),
+        ("eq.bass_boost", equaliser.request_bass_boost(), equaliser.decode_bass_boost),
+        ("conn.paired_count", connections.request_paired_count(), connections.decode_paired_count),
+        ("conn.own_index", connections.request_own_index(),
+         lambda p: connections.decode_single_byte(p, "own index")),
+        ("conn.max", connections.request_max_connections(),
+         lambda p: connections.decode_single_byte(p, "max connections")),
+    ]
+
+
+def _cmd_probe(args: argparse.Namespace) -> int:
+    """Issue every known read and report raw bytes alongside the decode.
+
+    Read-only. Nothing here mutates device state.
+    """
+    import json
+
+    from . import connections, equaliser
+    from .frame import MessageType
+    from .linux import FlockLease, LinuxTransport
+
+    results: list[dict] = []
+
+    def run(label: str, request, decode) -> None:
+        entry: dict = {"label": label, "tx": request.to_bytes().hex()}
+        try:
+            reply = session.request(request, timeout=args.timeout)
+        except ProtocolError as exc:
+            entry["error"] = f"{type(exc).__name__}: {exc}"
+            results.append(entry)
+            return
+        entry["rx"] = reply.to_bytes().hex()
+        entry["payload"] = reply.payload.hex()
+        entry["type"] = reply.type.name.lower()
+        if reply.type is MessageType.ERROR:
+            entry["error"] = "device returned an error frame"
+        else:
+            try:
+                entry["decoded"] = repr(decode(reply.payload))
+            except ProtocolError as exc:
+                entry["error"] = f"decode failed: {type(exc).__name__}: {exc}"
+        results.append(entry)
+
+    with FlockLease().acquire(args.address, timeout=args.lease_timeout):
+        with LinuxTransport().connect(
+            args.address, timeout=args.timeout, channel=args.channel
+        ) as connection:
+            session = Session(connection)
+            for label, request, decode in _probe_plan():
+                run(label, request, decode)
+
+            # Bands and peers are enumerated from what the device just reported.
+            config = next(
+                (r for r in results if r["label"] == "eq.configuration" and "decoded" in r),
+                None,
+            )
+            if config:
+                bands = equaliser.decode_configuration(bytes.fromhex(config["payload"])).bands
+                for band in range(min(bands, args.max_enumerate)):
+                    run(
+                        f"eq.band[{band}]",
+                        equaliser.request_band_gain(band),
+                        equaliser.decode_band_gain,
+                    )
+            for index in range(args.max_enumerate):
+                before = len(results)
+                run(f"conn.peer[{index}]", connections.request_peer(index),
+                    connections.decode_peer)
+                entry = results[before]
+                if "error" in entry or "valid=False" in entry.get("decoded", ""):
+                    break
+
+    if args.json:
+        print(json.dumps({"address": args.address, "reads": results}, indent=2))
+    else:
+        for entry in results:
+            outcome = entry.get("decoded") or entry.get("error", "")
+            print(f"{entry['label']:22} {entry.get('payload', '—'):<24} {outcome}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ohr", description="Read state from a Sennheiser Bluetooth headset."
@@ -102,6 +196,22 @@ def main(argv: list[str] | None = None) -> int:
     status.add_argument("--timeout", type=float, default=5.0)
     status.add_argument("--lease-timeout", type=float, default=2.0)
     status.set_defaults(func=_cmd_status)
+
+    probe = sub.add_parser(
+        "probe", help="issue every known read and show the raw bytes (read-only)"
+    )
+    probe.add_argument("address")
+    probe.add_argument("--channel", type=int)
+    probe.add_argument("--timeout", type=float, default=5.0)
+    probe.add_argument("--lease-timeout", type=float, default=2.0)
+    probe.add_argument(
+        "--max-enumerate",
+        type=int,
+        default=8,
+        help="upper bound when walking bands and peer slots",
+    )
+    probe.add_argument("--json", action="store_true")
+    probe.set_defaults(func=_cmd_probe)
 
     args = parser.parse_args(argv)
     try:

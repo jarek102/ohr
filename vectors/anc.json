@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "anc-on",
+      "kind": "payload",
+      "command": "anc_enabled",
+      "payload": "01",
+      "decoded": { "enabled": true },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09"
+      }
+    },
+    {
+      "id": "anc-on-earbuds",
+      "kind": "payload",
+      "command": "anc_enabled",
+      "payload": "01",
+      "decoded": { "enabled": true },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-09"
+      }
+    },
+    {
+      "id": "anc-off",
+      "kind": "payload",
+      "command": "anc_enabled",
+      "payload": "00",
+      "decoded": { "enabled": false },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Both devices happened to have ANC on when captured. The off value is required by the specification and is pinned so a decoder cannot pass by returning true unconditionally."
+      }
+    },
+    {
+      "id": "anc-invalid-state",
+      "kind": "payload",
+      "command": "anc_enabled",
+      "payload": "02",
+      "error": "invalid_value",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The field is a two-valued flag, not a truthiness test. Rejecting other values stops an unexpected reading being silently reported as on."
+      }
+    },
+    {
+      "id": "transparency-on",
+      "kind": "payload",
+      "command": "anc_transparency",
+      "payload": "01",
+      "decoded": { "enabled": true },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Captured while ANC also read as on. The two are separate features and are not mutually exclusive on the wire."
+      }
+    },
+    {
+      "id": "transparency-off",
+      "kind": "payload",
+      "command": "anc_transparency",
+      "payload": "00",
+      "decoded": { "enabled": false },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-09",
+        "note": "Captured while ANC read as on — the combination the vendor application presents as the ANC mode."
+      }
+    },
+    {
+      "id": "submodes-anti-wind-enabled",
+      "kind": "payload",
+      "command": "anc_submodes",
+      "payload": "010102000300",
+      "decoded": {
+        "submodes": [
+          { "id": 1, "name": "anti_wind", "state": 1 },
+          { "id": 2, "name": "comfort", "state": 0 },
+          { "id": 3, "name": "adaptive", "state": 0 }
+        ]
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Identical bytes were returned by the earbuds on the same date."
+      }
+    },
+    {
+      "id": "submodes-odd-length-is-invalid",
+      "kind": "payload",
+      "command": "anc_submodes",
+      "payload": "0101020003",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An identifier with no state must be rejected rather than read as a submode set to zero."
+      }
+    },
+    {
+      "id": "submodes-unknown-id-retained",
+      "kind": "payload",
+      "command": "anc_submodes",
+      "payload": "0101f002",
+      "decoded": {
+        "submodes": [
+          { "id": 1, "name": "anti_wind", "state": 1 },
+          { "id": 240, "name": null, "state": 2 }
+        ]
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An unrecognised submode is kept with its state and a null name. Dropping it would understate what a device offers as firmware adds capabilities."
+      }
+    },
+    {
+      "id": "submodes-empty",
+      "kind": "payload",
+      "command": "anc_submodes",
+      "payload": "",
+      "decoded": { "submodes": [] },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Zero pairs is a valid answer — a device with no submodes — and is not an error."
+      }
+    },
+    {
+      "id": "level-full",
+      "kind": "payload",
+      "command": "anc_level",
+      "payload": "64",
+      "decoded": { "level": 1.0 },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09"
+      }
+    },
+    {
+      "id": "level-zero",
+      "kind": "payload",
+      "command": "anc_level",
+      "payload": "00",
+      "decoded": { "level": 0.0 },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-09",
+        "note": "Zero while ANC read as on, so this value is not a proxy for whether ANC is active."
+      }
+    }
+  ]
+}

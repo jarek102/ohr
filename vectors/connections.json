@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "paired-count-three",
+      "kind": "payload",
+      "command": "conn_paired_count",
+      "payload": "0003",
+      "decoded": {
+        "value": 3
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Identical bytes from the earbuds the same day. The count is two bytes, big-endian, even for small values."
+      }
+    },
+    {
+      "id": "paired-count-single-byte-is-invalid",
+      "kind": "payload",
+      "command": "conn_paired_count",
+      "payload": "03",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The count is a two-byte field. Accepting one byte would silently work for small counts and then misread larger ones."
+      }
+    },
+    {
+      "id": "own-index-zero",
+      "kind": "payload",
+      "command": "conn_own_index",
+      "payload": "00",
+      "decoded": {
+        "value": 0
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09"
+      }
+    },
+    {
+      "id": "own-index-two",
+      "kind": "payload",
+      "command": "conn_own_index",
+      "payload": "02",
+      "decoded": {
+        "value": 2
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-09",
+        "note": "The same host occupies a different index on each headset, so this must be read per device and never assumed."
+      }
+    },
+    {
+      "id": "max-connections-two",
+      "kind": "payload",
+      "command": "conn_max_connections",
+      "payload": "02",
+      "decoded": {
+        "value": 2
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Identical from the earbuds. Both devices reported three paired peers against two simultaneous connections."
+      }
+    },
+    {
+      "id": "peer-connected",
+      "kind": "payload",
+      "command": "conn_peer",
+      "payload": "0000014d616368696e65203100",
+      "decoded": {
+        "index": 0,
+        "device_type": 0,
+        "link": "classic",
+        "no_classic_pairing": false,
+        "name": "Machine 1",
+        "valid": true
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Peer names are the owner's own machine names, so a placeholder is substituted. The protocol carries no checksum and the name is plain UTF-8, so nothing else in the payload depends on it \u2014 every other byte is exactly as captured from both devices on 2026-09-09. The byte layout here matches captures taken from both devices on 2026-09-09; only the name is substituted."
+      }
+    },
+    {
+      "id": "peer-paired-but-disconnected",
+      "kind": "payload",
+      "command": "conn_peer",
+      "payload": "0102004d616368696e65203200",
+      "decoded": {
+        "index": 1,
+        "device_type": 2,
+        "link": "disconnected",
+        "no_classic_pairing": false,
+        "name": "Machine 2",
+        "valid": true
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Peer names are the owner's own machine names, so a placeholder is substituted. The protocol carries no checksum and the name is plain UTF-8, so nothing else in the payload depends on it \u2014 every other byte is exactly as captured from both devices on 2026-09-09. Layout matches observed captures; the name is substituted."
+      }
+    },
+    {
+      "id": "peer-no-classic-pairing-bit",
+      "kind": "payload",
+      "command": "conn_peer",
+      "payload": "0200814d616368696e65203300",
+      "decoded": {
+        "index": 2,
+        "device_type": 0,
+        "link": "classic",
+        "no_classic_pairing": true,
+        "name": "Machine 3",
+        "valid": true
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Peer names are the owner's own machine names, so a placeholder is substituted. The protocol carries no checksum and the name is plain UTF-8, so nothing else in the payload depends on it \u2014 every other byte is exactly as captured from both devices on 2026-09-09. Not seen set on either device."
+      }
+    },
+    {
+      "id": "peer-empty-slot",
+      "kind": "payload",
+      "command": "conn_peer",
+      "payload": "ffffff00",
+      "decoded": {
+        "index": 255,
+        "device_type": 255,
+        "link": null,
+        "no_classic_pairing": false,
+        "name": "",
+        "valid": false
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Returned for the index past the last paired peer, on both devices. This is how enumeration knows to stop; it carries no name."
+      }
+    },
+    {
+      "id": "peer-unterminated-name",
+      "kind": "payload",
+      "command": "conn_peer",
+      "payload": "0300014d616368696e652034",
+      "decoded": {
+        "index": 3,
+        "device_type": 0,
+        "link": "classic",
+        "no_classic_pairing": false,
+        "name": "Machine 4",
+        "valid": true
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Peer names are the owner's own machine names, so a placeholder is substituted. The protocol carries no checksum and the name is plain UTF-8, so nothing else in the payload depends on it \u2014 every other byte is exactly as captured from both devices on 2026-09-09. A name running to the end of the payload with no terminator must be taken whole rather than dropped."
+      }
+    },
+    {
+      "id": "peer-truncated",
+      "kind": "payload",
+      "command": "conn_peer",
+      "payload": "0000",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Fewer than three bytes cannot carry index, type and status."
+      }
+    }
+  ]
+}

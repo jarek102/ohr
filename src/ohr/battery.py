@@ -1,6 +1,6 @@
-"""Battery level and battery type decoding.
+"""Battery level, battery type and charger state.
 
-Feature 3 (``power``), operations 3 and 14. Pure: no I/O.
+Feature 3 (``power``). Pure: no I/O.
 """
 
 from __future__ import annotations
@@ -12,8 +12,13 @@ from .errors import InvalidLength
 from .frame import Frame, MessageType, VENDOR_SENNHEISER
 
 FEATURE_POWER = 3
+OP_CHARGER_STATE = 2
 OP_BATTERY_LEVEL = 3
 OP_BATTERY_TYPES = 14
+
+#: Charger states. There is no case field here even on a model whose battery reading
+#: includes the case, so a case percentage does not imply the case reports charging.
+CHARGER_STATES: dict[int, str] = {0: "disconnected", 1: "charging", 2: "complete"}
 
 #: Reported as unavailable in the triplet shape. See the warning in :func:`decode_level`.
 UNAVAILABLE = 0xFF
@@ -111,3 +116,34 @@ def request_level() -> Frame:
 def request_types() -> Frame:
     """Build the battery-types request. Empty payload."""
     return Frame(VENDOR_SENNHEISER, FEATURE_POWER, MessageType.COMMAND, OP_BATTERY_TYPES)
+
+
+@dataclass(frozen=True, slots=True)
+class ChargerState:
+    """Charger state, for one or two positions.
+
+    ``second`` is ``None`` when the device reports a single value. Absence is kept
+    distinguishable from *disconnected*: they are different facts.
+    """
+
+    first: str | None
+    second: str | None = None
+
+
+def decode_charger(payload: bytes) -> ChargerState:
+    """Decode a charger-state reply.
+
+    One byte is a single result; two supply a pair. Further bytes are not consumed.
+    An unrecognised value keeps a ``None`` name rather than raising.
+    """
+    if not payload:
+        raise InvalidLength("charger payload is empty")
+    return ChargerState(
+        CHARGER_STATES.get(payload[0]),
+        CHARGER_STATES.get(payload[1]) if len(payload) > 1 else None,
+    )
+
+
+def request_charger() -> Frame:
+    """Build the charger-state request. Empty payload."""
+    return Frame(VENDOR_SENNHEISER, FEATURE_POWER, MessageType.COMMAND, OP_CHARGER_STATE)

@@ -13,12 +13,17 @@ from pathlib import Path
 
 import pytest
 
-from ohr import Frame, MessageType, battery, features, parse_frames
-from ohr.errors import InvalidLength
+from ohr import Frame, MessageType, anc, battery, connections, equaliser, features
+from ohr import parse_frames
+from ohr.errors import InvalidLength, InvalidValue
 
 VECTORS = Path(__file__).resolve().parents[1] / "vectors"
 
-ERRORS = {"invalid_length": InvalidLength}
+PAYLOAD_FILES = ("battery.json", "features.json", "anc.json", "equaliser.json",
+                 "connections.json")
+ALL_FILES = ("framing.json", *PAYLOAD_FILES)
+
+ERRORS = {"invalid_length": InvalidLength, "invalid_value": InvalidValue}
 
 
 def load(name: str) -> list[dict]:
@@ -73,59 +78,99 @@ def test_stream_reassembly(vec: dict) -> None:
 
 
 # --- payloads ---------------------------------------------------------------
+#
+# Each entry maps a command to its decoder and a function turning the result into
+# plain data, so a vector's "decoded" block can be compared directly.
 
-BATTERY = load("battery.json")
-FEATURES = load("features.json")
-
-
-def _check_error(vec: dict, decode, payload: bytes) -> bool:
-    if "error" not in vec:
-        return False
-    with pytest.raises(ERRORS[vec["error"]]):
-        decode(payload)
-    return True
+def _battery_level(r: battery.BatteryLevel) -> dict:
+    return {"shape": r.shape, "level": r.level, "left": r.left, "right": r.right,
+            "case": r.case}
 
 
-@pytest.mark.parametrize("vec", BATTERY, ids=ids(BATTERY))
-def test_battery(vec: dict) -> None:
+COMMANDS = {
+    "battery_level": (battery.decode_level, _battery_level),
+    "battery_types": (battery.decode_types, lambda r: {"first": r.first, "second": r.second}),
+    "battery_charger": (battery.decode_charger, lambda r: {"first": r.first, "second": r.second}),
+    "feature_list": (
+        features.decode,
+        lambda r: {"more": r.more,
+                   "features": [{"id": e.id, "name": e.name, "version": e.version}
+                                for e in r.features]},
+    ),
+    "anc_enabled": (anc.decode_enabled, lambda r: {"enabled": r}),
+    "anc_transparency": (anc.decode_transparency, lambda r: {"enabled": r}),
+    "anc_level": (anc.decode_level, lambda r: {"level": r}),
+    "anc_submodes": (
+        anc.decode_submodes,
+        lambda r: {"submodes": [{"id": s.id, "name": s.name, "state": s.state} for s in r]},
+    ),
+    "eq_mode": (equaliser.decode_mode, lambda r: {"value": r[0], "name": r[1]}),
+    "eq_configuration": (
+        equaliser.decode_configuration,
+        lambda r: {"bands": r.bands, "gain_min_db": r.gain_min_db,
+                   "gain_max_db": r.gain_max_db, "trailing": r.trailing.hex()},
+    ),
+    "eq_band_gain": (equaliser.decode_band_gain, lambda r: {"gain_db": r}),
+    "eq_bass_boost": (equaliser.decode_bass_boost, lambda r: {"enabled": r}),
+    "conn_paired_count": (connections.decode_paired_count, lambda r: {"value": r}),
+    "conn_own_index": (
+        lambda p: connections.decode_single_byte(p, "own index"),
+        lambda r: {"value": r},
+    ),
+    "conn_max_connections": (
+        lambda p: connections.decode_single_byte(p, "max connections"),
+        lambda r: {"value": r},
+    ),
+    "conn_peer": (
+        connections.decode_peer,
+        lambda r: {"index": r.index, "device_type": r.device_type, "link": r.link,
+                   "no_classic_pairing": r.no_classic_pairing, "name": r.name,
+                   "valid": r.valid},
+    ),
+}
+
+PAYLOADS = [v for name in PAYLOAD_FILES for v in load(name)]
+
+
+def _same(got: object, want: object, path: str = "") -> None:
+    """Compare decoded data, tolerating float representation."""
+    if isinstance(want, float) or isinstance(got, float):
+        assert got == pytest.approx(want), path
+    elif isinstance(want, dict):
+        assert isinstance(got, dict) and got.keys() == want.keys(), path
+        for key in want:
+            _same(got[key], want[key], f"{path}.{key}")
+    elif isinstance(want, list):
+        assert isinstance(got, list) and len(got) == len(want), path
+        for i, (g, w) in enumerate(zip(got, want, strict=True)):
+            _same(g, w, f"{path}[{i}]")
+    else:
+        assert got == want, path
+
+
+@pytest.mark.parametrize("vec", PAYLOADS, ids=ids(PAYLOADS))
+def test_payload(vec: dict) -> None:
+    decode, as_data = COMMANDS[vec["command"]]
     payload = bytes.fromhex(vec["payload"])
 
-    if vec["command"] == "battery_level":
-        if _check_error(vec, battery.decode_level, payload):
-            return
-        got = battery.decode_level(payload)
-        want = vec["decoded"]
-        assert got.shape == want["shape"]
-        for field in ("level", "left", "right", "case"):
-            expected = want.get(field)
-            actual = getattr(got, field)
-            if expected is None:
-                assert actual is None, f"{field} should be unavailable"
-            else:
-                assert actual == pytest.approx(expected), field
-
-    elif vec["command"] == "battery_types":
-        if _check_error(vec, battery.decode_types, payload):
-            return
-        got_types = battery.decode_types(payload)
-        assert got_types.first == vec["decoded"]["first"]
-        assert got_types.second == vec["decoded"]["second"]
-
-    else:  # pragma: no cover
-        pytest.fail(f"unknown command {vec['command']}")
-
-
-@pytest.mark.parametrize("vec", FEATURES, ids=ids(FEATURES))
-def test_feature_list(vec: dict) -> None:
-    payload = bytes.fromhex(vec["payload"])
-    if _check_error(vec, features.decode, payload):
+    if "error" in vec:
+        with pytest.raises(ERRORS[vec["error"]]):
+            decode(payload)
         return
-    got = features.decode(payload)
-    want = vec["decoded"]
-    assert got.more == want["more"]
-    assert [
-        {"id": e.id, "name": e.name, "version": e.version} for e in got.features
-    ] == want["features"]
+
+    want = dict(vec["decoded"])
+    got = as_data(decode(payload))
+    # A vector need only pin the fields it cares about.
+    _same({k: got[k] for k in want}, want, vec["command"])
+
+
+def test_every_command_is_exercised() -> None:
+    """A decoder without a vector is unproven; a vector without a decoder cannot run."""
+    covered = {v["command"] for v in PAYLOADS}
+    assert covered == set(COMMANDS), (
+        f"no vectors for {set(COMMANDS) - covered}, "
+        f"no decoder for {covered - set(COMMANDS)}"
+    )
 
 
 # --- properties that hold across every vector -------------------------------
@@ -138,7 +183,7 @@ def test_every_vector_declares_provenance() -> None:
     was seen to do, or something this specification requires. There is no third
     category.
     """
-    for name in ("framing.json", "battery.json", "features.json"):
+    for name in ALL_FILES:
         for vec in load(name):
             prov = vec.get("provenance")
             assert prov, f"{name}:{vec['id']} has no provenance"
@@ -159,7 +204,7 @@ def test_observed_vectors_exist_for_both_devices() -> None:
     """The two models answer differently; fixtures from only one would hide that."""
     seen = {
         vec["provenance"].get("device")
-        for name in ("framing.json", "battery.json", "features.json")
+        for name in ALL_FILES
         for vec in load(name)
         if vec["provenance"]["kind"] == "observed"
     }

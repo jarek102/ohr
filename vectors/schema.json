@@ -4,14 +4,21 @@
   "title": "ohr test vectors",
   "description": "Language-neutral conformance fixtures. Any implementation is correct exactly insofar as it reproduces these.",
   "type": "object",
-  "required": ["version", "vectors"],
+  "required": [
+    "version",
+    "vectors"
+  ],
   "additionalProperties": false,
   "properties": {
-    "version": { "const": 1 },
+    "version": {
+      "const": 1
+    },
     "vectors": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/vector" }
+      "items": {
+        "$ref": "#/$defs/vector"
+      }
     }
   },
   "$defs": {
@@ -25,21 +32,42 @@
       "oneOf": [
         {
           "type": "object",
-          "required": ["kind", "device", "date"],
+          "required": [
+            "kind",
+            "device",
+            "date"
+          ],
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "observed" },
-            "device": { "enum": ["accentum-wireless", "momentum-tw4"] },
-            "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-            "note": { "type": "string" }
+            "kind": {
+              "const": "observed"
+            },
+            "device": {
+              "enum": [
+                "accentum-wireless",
+                "momentum-tw4"
+              ]
+            },
+            "date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "note": {
+              "type": "string"
+            }
           }
         },
         {
           "type": "object",
-          "required": ["kind", "rationale"],
+          "required": [
+            "kind",
+            "rationale"
+          ],
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "constructed" },
+            "kind": {
+              "const": "constructed"
+            },
             "rationale": {
               "type": "string",
               "description": "Why this rule matters. A constructed vector asserts what the specification requires, not what hardware was seen to do."
@@ -50,35 +78,96 @@
     },
     "vector": {
       "type": "object",
-      "required": ["id", "kind", "provenance"],
+      "required": [
+        "id",
+        "kind",
+        "provenance"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-        "kind": { "enum": ["frame", "stream", "payload"] },
-        "provenance": { "$ref": "#/$defs/provenance" }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "kind": {
+          "enum": [
+            "frame",
+            "stream",
+            "payload"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "kind": { "const": "frame" } } },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "frame"
+              }
+            }
+          },
           "then": {
-            "required": ["bytes", "vendor", "feature", "type", "operation", "payload"],
+            "required": [
+              "bytes",
+              "vendor",
+              "feature",
+              "type",
+              "operation",
+              "payload"
+            ],
             "additionalProperties": false,
             "properties": {
               "id": true,
               "kind": true,
               "provenance": true,
-              "bytes": { "$ref": "#/$defs/hex" },
-              "vendor": { "type": "integer", "minimum": 0, "maximum": 65535 },
-              "feature": { "type": "integer", "minimum": 0, "maximum": 127 },
-              "type": { "enum": ["command", "notification", "response", "error"] },
-              "operation": { "type": "integer", "minimum": 0, "maximum": 127 },
-              "payload": { "$ref": "#/$defs/hex" }
+              "bytes": {
+                "$ref": "#/$defs/hex"
+              },
+              "vendor": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "feature": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              "type": {
+                "enum": [
+                  "command",
+                  "notification",
+                  "response",
+                  "error"
+                ]
+              },
+              "operation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              "payload": {
+                "$ref": "#/$defs/hex"
+              }
             }
           }
         },
         {
-          "if": { "properties": { "kind": { "const": "stream" } } },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "stream"
+              }
+            }
+          },
           "then": {
-            "required": ["chunks", "frames", "remainder"],
+            "required": [
+              "chunks",
+              "frames",
+              "remainder"
+            ],
             "additionalProperties": false,
             "properties": {
               "id": true,
@@ -86,12 +175,16 @@
               "provenance": true,
               "chunks": {
                 "type": "array",
-                "items": { "$ref": "#/$defs/hex" },
+                "items": {
+                  "$ref": "#/$defs/hex"
+                },
                 "description": "Delivered in order; each is one read from the transport."
               },
               "frames": {
                 "type": "array",
-                "items": { "$ref": "#/$defs/hex" },
+                "items": {
+                  "$ref": "#/$defs/hex"
+                },
                 "description": "Complete frames that must emerge, in order."
               },
               "remainder": {
@@ -102,28 +195,69 @@
           }
         },
         {
-          "if": { "properties": { "kind": { "const": "payload" } } },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "payload"
+              }
+            }
+          },
           "then": {
-            "required": ["command", "payload"],
+            "required": [
+              "command",
+              "payload"
+            ],
             "additionalProperties": false,
             "properties": {
               "id": true,
               "kind": true,
               "provenance": true,
-              "command": { "enum": ["battery_level", "battery_types", "feature_list"] },
-              "payload": { "$ref": "#/$defs/hex" },
+              "command": {
+                "enum": [
+                  "battery_level",
+                  "battery_types",
+                  "battery_charger",
+                  "feature_list",
+                  "anc_enabled",
+                  "anc_transparency",
+                  "anc_submodes",
+                  "anc_level",
+                  "eq_mode",
+                  "eq_configuration",
+                  "eq_band_gain",
+                  "eq_bass_boost",
+                  "conn_paired_count",
+                  "conn_own_index",
+                  "conn_max_connections",
+                  "conn_peer"
+                ]
+              },
+              "payload": {
+                "$ref": "#/$defs/hex"
+              },
               "decoded": {
                 "type": "object",
                 "description": "Expected decode. Mutually exclusive with 'error'."
               },
               "error": {
-                "enum": ["invalid_length", "invalid_value"],
+                "enum": [
+                  "invalid_length",
+                  "invalid_value"
+                ],
                 "description": "Decoding must raise. Mutually exclusive with 'decoded'."
               }
             },
             "oneOf": [
-              { "required": ["decoded"] },
-              { "required": ["error"] }
+              {
+                "required": [
+                  "decoded"
+                ]
+              },
+              {
+                "required": [
+                  "error"
+                ]
+              }
             ]
           }
         }

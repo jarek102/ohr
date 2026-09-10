@@ -187,6 +187,64 @@
         "kind": "constructed",
         "rationale": "Two independently decoded bytes are required."
       }
+    },
+    {
+      "id": "charger-disconnected-pair",
+      "kind": "payload",
+      "command": "battery_charger",
+      "payload": "0000",
+      "decoded": { "first": "disconnected", "second": "disconnected" },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-09",
+        "note": "Two values, from the model whose battery level is a single value. The two commands do not share a shape."
+      }
+    },
+    {
+      "id": "charger-charging-pair",
+      "kind": "payload",
+      "command": "battery_charger",
+      "payload": "0101",
+      "decoded": { "first": "charging", "second": "charging" },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-09"
+      }
+    },
+    {
+      "id": "charger-single-value",
+      "kind": "payload",
+      "command": "battery_charger",
+      "payload": "02",
+      "decoded": { "first": "complete", "second": null },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "One byte is a valid reply. The absent second value stays null rather than defaulting to disconnected: absence and disconnected are different facts."
+      }
+    },
+    {
+      "id": "charger-unknown-value-kept",
+      "kind": "payload",
+      "command": "battery_charger",
+      "payload": "07",
+      "decoded": { "first": null, "second": null },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An unrecognised state keeps a null name rather than raising, so a firmware addition does not break a status read."
+      }
+    },
+    {
+      "id": "charger-empty-is-invalid",
+      "kind": "payload",
+      "command": "battery_charger",
+      "payload": "",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "At least one value is required."
+      }
     }
   ]
 }

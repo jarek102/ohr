@@ -41,7 +41,10 @@ def test_vector_file_matches_schema(path: Path, schema: dict) -> None:
 
 def test_every_vector_file_is_covered() -> None:
     """A new vector file must be picked up, not silently ignored."""
-    assert {p.name for p in FILES} == {"framing.json", "battery.json", "features.json"}, (
+    assert {p.name for p in FILES} == {
+        "framing.json", "battery.json", "features.json",
+        "anc.json", "equaliser.json", "connections.json",
+    }, (
         "vector files changed — add the new one to the runner in test_vectors.py too, "
         "or it will validate but never execute"
     )

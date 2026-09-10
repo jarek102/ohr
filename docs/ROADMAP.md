@@ -2,18 +2,18 @@
 
 Where this is going, in the order it makes sense to get there.
 
-**Today:** the specification, the vectors and the pure Python codec exist. Nothing talks
-to a device yet — there is no transport implementation, and no write has ever been sent
-to hardware.
+**Today:** the library reads. Every read for status, noise control, the equaliser and
+connections is implemented, confirmed against both models, and specified. Nothing
+writes — no write has ever been sent to hardware.
 
 ## At a glance
 
 | | Goal | Status |
 |---|---|---|
 | **M0** | Specification, vectors, pure Python codec | **shipped** · 2026-09-09 |
-| **M1** | Reach the hardware — read a battery level from a real headset | not started |
-| **M2** | Complete the read surface — status, ANC, equaliser, connections | not started · after M1 |
-| **M3** | ANC writes — switch between ANC, Transparency and Off | not started · after M2 |
+| **M1** | Reach the hardware — read a battery level from a real headset | **shipped** · 2026-09-09 |
+| **M2** | Complete the read surface — status, ANC, equaliser, connections | **shipped** · 2026-09-09 |
+| **M3** | ANC writes — switch between ANC, Transparency and Off | not started · next |
 | **M4** | Equaliser writes — band gains, bass boost, presets | not started · after M3 |
 | **M5** | Adwaita application: status | not started · after M2 |
 | **M6** | Adwaita application: control | not started · after M3, M4, M5 |
@@ -40,9 +40,12 @@ work rather than queued behind it. W1 needs no Bluetooth at all.
 **Done when:** battery and feature map are read from two different models through the
 public API, with the existing vectors untouched.
 
-**Known risks:** UUID resolution is unproven here — every capture so far used a
-hard-coded channel, because SDP tooling was unavailable. One model also times out on a
-first connection attempt and succeeds on a retry, reproducibly.
+**Outcome:** shipped, with one finding. **Service discovery does not answer on either
+device.** Searches for the vendor service, the Serial Port profile and even the public
+browse group all returned success with zero records, while BlueZ showed the same
+devices advertising those UUIDs. So the channel is resolved in three steps — supplied,
+then remembered, then discovered — and when none answers, the connection fails rather
+than guessing. No channel numbers ship in the library.
 
 ### M2 — Complete the read surface
 
@@ -55,8 +58,12 @@ hardware and specified.
 - Charger state
 - A vector and a `commands.md` entry for each
 
-**Done when:** `ohr status` prints complete state for both models, and every command it
-issues appears in the specification with an `observed` vector.
+**Outcome:** shipped. `ohr probe` exercises sixteen reads; all decoders were correct
+against both models on the first attempt. Three findings went into the specification:
+ANC and transparency are independent flags and were seen enabled together; the charger
+command returns two values on the model whose battery returns one; and peer *device
+type* is not a device category, since the same peer reports different values on the two
+headsets.
 
 ### M3 — ANC writes
 

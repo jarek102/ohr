@@ -9,7 +9,8 @@ Supports:
  - EQ
  - connection managemant
 
-> **Status: pre-alpha.** 
+> **Status: pre-alpha.** All reads are implemented and verified against both
+> devices; nothing writes yet. See [the roadmap](docs/ROADMAP.md).
 
 ## What is here
 
