@@ -45,10 +45,10 @@ Build the retry in from the start and do not treat a first failure as absence.
 
 ## M2 — Complete the read surface
 
-**Goal:** every read for status, noise control, equaliser and connections is confirmed
+**Goal:** every read for status, ANC, equaliser and connections is confirmed
 on hardware and specified.
 
-- Noise control: enabled state, transparency state, submodes, level
+- ANC: enabled state, transparency state, submodes, level
 - Equaliser: configuration, per-band gain, bass boost, mode
 - Connections: peer count, peer details, own index, maximum, active device
 - Charger state
@@ -59,9 +59,9 @@ issues appears in the specification with an `observed` vector.
 
 **Depends on:** M1.
 
-## M3 — Noise-control writes
+## M3 — ANC writes
 
-**Goal:** switch between the three noise modes, verifiably.
+**Goal:** switch between the three ANC modes — ANC, Transparency, Off — verifiably.
 
 This is the first write ever sent to these devices. Capture full state before, restore
 after, and verify by read-back rather than by the acknowledgement — **setters reply
@@ -97,7 +97,7 @@ atomically from the user's point of view or reports precisely what failed.
 
 - Device selection, and "nothing connected" as a first-class state
 - Battery presented as **individual fields** — no invented aggregate
-- Charger, noise-control state, connection summary
+- Charger, ANC state, connection summary
 - Lease-scoped polling; contention rendered as a state, never as a crash
 
 **Done when:** the app is worth leaving open to monitor a headset.
@@ -106,9 +106,9 @@ atomically from the user's point of view or reports precisely what failed.
 
 ## M6 — Standalone application: control
 
-**Goal:** noise control and equaliser, from the app.
+**Goal:** ANC and equaliser, from the app.
 
-- Noise-mode control, **driven by per-device capability** rather than a fixed layout —
+- Mode control, **driven by per-device capability** rather than a fixed layout —
   the two models differ in what they offer
 - Equaliser: bands, presets, bass boost
 - Pending state during multi-command sequences; no optimistic lie
@@ -145,15 +145,55 @@ manual refresh, and two consumers can run simultaneously without contending.
 
 **Depends on:** M2. Required before more than one consumer is live.
 
+## Windows
+
+A **parallel track**, not a continuation. Different language and stack, and the first
+half needs no Bluetooth at all.
+
+Windows is C# and WinUI 3, not Python. WinRT is first-class from C# and awkward from
+Python, and a WinUI application should be a single executable rather than one embedding
+an interpreter. This is exactly the case [ADR 001](adr/001-spec-and-vectors-are-the-artifact.md)
+was written for: the specification and the vectors are the shared artifact, and the two
+implementations are peers.
+
+### W1 — A C# codec that passes the same vectors
+
+**Goal:** a second implementation of the pure codec, checked against `vectors/`
+unchanged.
+
+- Framing, word packing, stream reassembly
+- Every payload codec the specification covers at that point
+- Consumes the same JSON fixtures — no Python anywhere in the loop
+
+**Done when:** both implementations pass identical vectors, and deliberately breaking
+one is caught by them.
+
+**Why this comes first:** it is the first real test of the premise. If shared vectors
+cannot keep two implementations honest, that is worth discovering here — with no
+hardware, no UI and no transport to confuse the diagnosis — rather than after a Windows
+application has been built on the assumption.
+
+**Depends on:** M2 for a read surface worth porting; M4 as well if writes are in scope.
+
+### W2 — WinRT transport and a WinUI 3 application
+
+**Goal:** read status and control ANC on Windows.
+
+- WinRT `Rfcomm` + `StreamSocket` transport, resolved by service UUID
+- Named-mutex lease — same semantics as the POSIX advisory lock, including release on
+  process death
+- WinUI 3 application: status, ANC, equaliser
+
+**Do not reach for `bleak` or any BLE library.** This protocol runs over RFCOMM
+(Classic). It is the most likely wrong turn on this track, and it costs a day.
+
+**Depends on:** W1, plus M3 for the write discipline.
+
 ## Downstream
 
-**Shell integration** — a quick-settings surface for noise control and battery, in a
-separate project consuming this library. Unblocked by M3; wants M8 to stay honest about
-current state. Tracked there, not here.
-
-**Windows** — the core is deliberately free of platform and toolkit imports, and the
-transport and lease seams are documented, so a second implementation is a port rather
-than a rewrite. Not planned; see [ADR 001](adr/001-spec-and-vectors-are-the-artifact.md).
+**Shell integration** — a quick-settings surface for ANC and battery, in a separate
+project consuming this library. Unblocked by M3; wants M8 to stay honest about current
+state. Tracked there, not here.
 
 ## Not planned
 
@@ -165,11 +205,18 @@ rather than forgotten.
 
 ## Open decisions
 
-**Where the standalone application lives.** Recommendation: **its own repository**,
-depending on this one. The library is meant to serve several front-ends — this app, a
-shell, potentially a Windows implementation — and bundling one of them here privileges
-it and drags a GUI toolkit into a repository whose selling point is having no
-dependencies.
+**Where each piece lives.** Recommendation, drawing the line between *implementations
+of the protocol* and *applications built on them*:
+
+- **This repository** holds the specification, the vectors, and every implementation of
+  the protocol — Python now, C# at W1. Implementations must sit beside the vectors,
+  because the one thing that must never fork is the fixture set. A fork there defeats
+  the entire premise.
+- **Applications live in their own repositories**, each depending on the library for its
+  platform. Bundling one front-end here would privilege it and drag a GUI toolkit into a
+  repository whose selling point is having no dependencies.
+
+So: Adwaita app and WinUI app outside; Python and C# codecs inside.
 
 **Whether the app or the shell surface comes first** once M3 lands. Both are unblocked
 at the same moment. The app is the better proving ground; the shell surface is the

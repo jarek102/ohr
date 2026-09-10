@@ -91,6 +91,6 @@ can move a device across that boundary.
 
 ## Not yet specified
 
-Noise control, the equaliser and the connection-management command set are not
+ANC, the equaliser and the connection-management command set are not
 specified here yet — they are present in neither the vectors nor the code. They will
 be added as each is exercised against a device and captured.
