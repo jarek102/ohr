@@ -277,6 +277,30 @@ first half of this in practice rather than on paper.
 unblocked at the same moment. The application is the better proving ground; the shell
 surface is used far more often.
 
+## Leads
+
+Things known to exist because a device does them, with no command identified yet.
+Listed because a lead with a known right answer is much cheaper to chase than one
+without.
+
+**The negotiated codec.** The devices report it — a codec name and a sample rate, or no
+stream at all. This is the highest-value one: it would let the finding that control
+traffic degrades audio be *measured* rather than heard, and it bears directly on the
+call problems that started this work.
+
+**Firmware version.** Feature 9 is `versions` and both devices advertise it. The answer
+is already known for each — `3.34.0` on the over-ear model, `5.22.1` on the earbuds — so
+whatever read produces those numbers is self-evidently the right one. A rare case of
+having the oracle before the command.
+
+**Wear detection.** The earbuds pause on removal, so they know. That is the missing
+piece behind two open questions: why transparency will not hold with an earbud in the
+case, and whether an earbud can be out but not joined.
+
+**Per-device settings** — auto power off, tone and voice prompts, battery protection,
+audio mode priority. The prompts one is not cosmetic: it decides whether writes are
+audible, which is currently a caveat on a rule this library enforces.
+
 ## Not planned
 
 Capabilities some devices advertise that are not intended for implementation soon:

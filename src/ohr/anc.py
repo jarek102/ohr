@@ -149,10 +149,10 @@ def request_set_enabled(on: bool) -> Frame:
     the write and not to any change of value. Turning ANC *off* leaves transparency
     alone; the coupling runs one way only.
 
-    **It is audible, in both directions, on both models** — the one setter here that is.
-    That makes a redundant write the opposite of a redundant read: it beeps at someone.
-    Send it only when the flag is actually changing, or when its side effect on
-    transparency is the point.
+    **It is audible, in both directions, on both models** — the one setter here that is,
+    as configured. Devices carry a tone-and-prompts setting the owner can change, so no
+    client can know whether a write will be heard. Assume it may be: send this only when
+    the flag is actually changing, or when its side effect on transparency is the point.
     """
     return Frame(
         VENDOR_SENNHEISER,

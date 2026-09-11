@@ -125,6 +125,13 @@ Control traffic and the audio link share a radio. Probe when nothing is playing,
 routine polling modest, and treat a burst of requests as something with a cost to the
 person listening rather than a free way to learn about the device.
 
+That conclusion currently rests on one person's ears, which is weaker than it should be
+for something this consequential. **The devices know their own negotiated codec** — the
+vendor application displays it, naming a codec and a sample rate, or saying there is no
+stream. Whatever command carries that would turn this from an impression into a
+measurement: read it, run the burst, read it again. Finding it is worth more than
+another listening test.
+
 ## Writes
 
 No setter in this protocol returns meaningful state. Setters reply with an
