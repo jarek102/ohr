@@ -16,7 +16,7 @@ by read-back on hardware. The equaliser and connection management are still read
 | **M2** | Complete the read surface — status, ANC, equaliser, connections | **shipped** · 2026-09-09 |
 | **M3** | ANC writes — switch between ANC, Transparency and Off | **shipped** · 2026-09-10 |
 | **M4** | Equaliser writes — band gains, bass boost, presets | not started · next |
-| **M5** | Adwaita application: status | not started · after M2 |
+| **M5** | Adwaita application: status | **in progress** · ohr-gtk |
 | **M6** | Adwaita application: control | not started · after M3, M4, M5 |
 | **M7** | Connection management — see and change who holds the headset | not started · after M3 |
 | **M8** | Live state — stay correct when something else changes it | not started · after M2, and now load-bearing |
@@ -95,9 +95,11 @@ The general rule outlives its explanation, and outranks the milestone: **a confi
 read-back is not proof a setting persists.** A device can acknowledge a write, confirm
 it, and then abandon it. Immediate verification proves the command was taken, not kept.
 
-Still open, and outside what this protocol can answer: with the flag confirmed on and
-both earbuds active, the effect was audible in the right earbud only. There is one
-transparency flag for the pair and no per-earbud read to check it against.
+Passthrough was once reported reaching one earbud only, and did not reproduce in any
+later attempt. The likeliest explanation is an earbud that left the case without
+joining the pair — and **nothing specified here would catch that**, since a battery
+level is reported for an earbud whether or not it is participating. Feature 14 (`tws`)
+is the obvious place to look and is not specified.
 
 Second, and the one that cost the most: **the flags are coupled, one way.** Engaging
 ANC clears transparency — including when ANC is already on, so the side effect belongs
@@ -141,6 +143,13 @@ completely or reports precisely what failed.
 - Lease-scoped polling, with contention shown as a state rather than an error
 
 **Done when:** the application is worth leaving open to monitor a headset.
+
+**In progress** as [ohr-gtk](https://github.com/jarek102/ohr-gtk), which started as a
+surface for manual testing and is honest about being one. Status, the three modes, and
+a developer panel listing every command with raw hex both ways. Two things it already
+settles: all Bluetooth work belongs on a thread that owns the lease, the socket and the
+session together, and a mode change must re-read the flags in the same operation that
+writes them.
 
 ### M6 — Adwaita application: control
 
@@ -260,7 +269,9 @@ applications built on them:
   platform. Bundling one front-end here would privilege it, and drag a GUI toolkit into
   a repository whose selling point is having no dependencies.
 
-So: Adwaita and WinUI applications outside; Python and C# codecs inside.
+So: Adwaita and WinUI applications outside; Python and C# codecs inside. The Adwaita
+one now exists as [ohr-gtk](https://github.com/jarek102/ohr-gtk), which settles the
+first half of this in practice rather than on paper.
 
 **Whether the application or the shell surface comes first** once M3 lands. Both are
 unblocked at the same moment. The application is the better proving ground; the shell
