@@ -149,10 +149,11 @@ def request_set_enabled(on: bool) -> Frame:
     the write and not to any change of value. Turning ANC *off* leaves transparency
     alone; the coupling runs one way only.
 
-    **It is audible.** Both models signal ANC with a confirmation tone, so a redundant
-    write is not free the way a redundant read is — it beeps at someone. Send this only
-    when the flag is actually changing, or when its side effect on transparency is the
-    point.
+    **It is audible, in both directions.** Both models play a tone in the wearer's ears
+    when ANC goes on *and* when it goes off. This is the only setter here known to make
+    a sound, which makes a redundant write to it the opposite of a redundant read: it
+    beeps at someone. Send it only when the flag is actually changing, or when its side
+    effect on transparency is the point.
     """
     return Frame(
         VENDOR_SENNHEISER,
@@ -168,8 +169,9 @@ def request_set_transparency(on: bool) -> Frame:
 
     A different feature from ANC, so this neither implies nor cancels the other.
 
-    **It is audible**, as the ANC setter is: both models signal either change with a
-    tone. A write that changes nothing still beeps at whoever is wearing them.
+    **Silent**, unlike the ANC setter: neither model plays a tone when transparency
+    changes, in either direction. So a redundant write here is merely pointless rather
+    than something the wearer hears.
     """
     return Frame(
         VENDOR_SENNHEISER,
@@ -306,10 +308,13 @@ def plan_mode(target: Mode, current: State) -> tuple[Step, ...]:
     a stale state produces a sequence that verifies correctly and still leaves the
     wrong mode selected.
 
-    A write here is **audible** — both models signal ANC and transparency with a tone —
-    so a flag already in the wanted position is left alone rather than written for
-    tidiness. That also makes an empty plan a normal answer, meaning *already there*,
-    rather than a failure to produce one.
+    **The ANC write is audible**, on both models and in both directions, so a flag
+    already in the wanted position is left alone rather than written for tidiness — a
+    redundant enable is a beep in someone's ears. Transparency is silent, but it is
+    skipped on the same terms; there is no reason to send either.
+
+    That makes an empty plan a normal answer, meaning *already there*, rather than a
+    failure to produce one.
     """
     if target is Mode.ANC:
         steps = []
@@ -345,9 +350,9 @@ def plan_state(target: State, current: State) -> tuple[Step, ...]:
     rewritten in that case rather than skipped.
 
     Skipping it instead produces the worst available outcome: a plan that verifies
-    every write it makes and still leaves the device somewhere else. The rewrite costs
-    a tone in the wearer's ears, and there is no way around it: the write that silenced
-    the flag is the one that was asked for.
+    every write it makes and still leaves the device somewhere else. The rewrite itself
+    is free — transparency is silent — though the ANC write that made it necessary is
+    not.
 
     Everything that must go off goes off first, matching :func:`plan_mode`, and ANC is
     set before transparency so the coupling runs before the flag it would disturb.

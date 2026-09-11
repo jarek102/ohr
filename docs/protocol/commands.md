@@ -332,20 +332,25 @@ be verified by a read.**
 An error reply is also an answer, and it means the setting is now *unknown* rather than
 unchanged — so read it back after one of those too.
 
-### Writes are audible
+### The ANC write is audible; the transparency write is not
 
-Both models signal an ANC or transparency change with a **tone in the wearer's ears**.
-A write is not the private, idempotent thing a read is: repeating one has a cost, and
-the person paying it is wearing the device.
+Both models play a **tone in the wearer's ears** when ANC changes, going on and going
+off alike. Transparency is silent in both directions, on both models.
 
-This is a design constraint, not a curiosity. Never write a flag that already holds the
-value being asked for; build every sequence from a fresh read and send only what
-differs. An empty sequence — *already there* — is a correct answer, and a client that
-treats it as a failure and writes anyway will beep at someone for nothing.
+That asymmetry is worth stating precisely, because it is the one write here that is not
+the private, idempotent thing a read is. Repeating it has a cost, and the person paying
+it is wearing the device.
 
-One beep is unavoidable. Restoring both flags on means an ANC-on write, which clears
-transparency, which must then be written again. The write that silences the flag is the
-one that was asked for.
+So: never write a flag that already holds the value being asked for. Build every
+sequence from a fresh read and send only what differs. An empty sequence — *already
+there* — is a correct answer, and a client that treats it as a failure and writes
+anyway will beep at someone for nothing.
+
+Whether `0x1a02` is audible has not been established. It engages ANC, so expect that it
+is until someone listens.
+
+One tone can be unavoidable: selecting ANC from anywhere else requires the ANC write,
+and there is no silent route to it.
 
 ### A read-back is necessary, and not sufficient
 

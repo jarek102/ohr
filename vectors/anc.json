@@ -611,7 +611,7 @@
         "kind": "observed",
         "device": "momentum-tw4",
         "date": "2026-09-10",
-        "note": "Clearing transparency is the whole change; ANC is already on. Writing it again would be audible — both models signal an ANC or transparency change with a tone in the wearer's ears — so a redundant write here is a defect the wearer hears, not a harmless one."
+        "note": "Clearing transparency is the whole change; ANC is already on. Writing ANC again would be audible — both models play a tone when ANC changes, in either direction, while transparency is silent — so a redundant write to that one flag is a defect the wearer hears."
       }
     },
     {
@@ -627,7 +627,7 @@
       "verify": [],
       "provenance": {
         "kind": "constructed",
-        "rationale": "An empty plan is the correct answer for a mode already selected, and must be reported as 'already there' rather than as a failure to build one. The alternative is a write that changes nothing and beeps at the wearer for no reason."
+        "rationale": "An empty plan is the correct answer for a mode already selected, and must be reported as 'already there' rather than as a failure to build one. The alternative is a redundant ANC write, which is the one setter here that beeps at the wearer."
       }
     }
   ]
