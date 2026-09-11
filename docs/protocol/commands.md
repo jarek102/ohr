@@ -107,6 +107,11 @@ consumed.
 single battery level but *two* charger values, so the number of charger values cannot
 be predicted from the battery shape — read both.
 
+On the earbuds the pair is **per earbud**, and tracks the case directly: `01 01` with
+both inside, `01 00` with one taken out, `00 00` with both out. That makes this read
+the way to tell whether the earbuds are in their case, which matters — see
+[writes](#a-read-back-is-necessary-and-not-sufficient).
+
 There is **no case field**, even on a model whose battery reading includes the case. A
 case percentage therefore says nothing about whether the case is charging.
 
@@ -175,10 +180,16 @@ over-ear model through all three modes while reading both:
 | both off | 0 | 100 |
 | ANC off, transparency on | 100 | 100 |
 
-`0x1803` never moved. `0x1a03` followed whichever path was active — mirroring the
-transparency level whenever transparency was on, and reporting the ANC level otherwise.
-The earbuds show the same split from the other side: `0x1803` reads 75 while `0x1a03`
-reads 0, with transparency off.
+`0x1803` never moved. `0x1a03` did, and what it reports depends on the flags:
+
+- **transparency off** — the ANC level. Writing 0, 40, 50 and 100 through `0x1a02` read
+  back here each time.
+- **transparency on** — 100, on both models.
+
+It is **not** the transparency level in that second case, however much it looks like it
+on the over-ear model, where both happen to be 100. The earbuds settle it: `0x1803`
+reads 75 there, and `0x1a03` still reads 100 with transparency on. Why it reads full
+scale has not been established, so nothing here depends on it.
 
 So `0x1803` is the one that means the same thing every time it is called. A reading from
 `0x1a03` is meaningful only alongside the flags it was taken with — comparing two of
@@ -316,15 +327,26 @@ unchanged — so read it back after one of those too.
 
 ### A read-back is necessary, and not sufficient
 
-The earbuds accepted `0x1804 01`, returned success, and answered the transparency read
-with 1. Within a second the same read returned 0, and it stayed there. Repeated with
-one earbud out of the case — the charger read confirming it, one bud charging and one
-not — with the same result, so the case alone does not explain it. It reverts from
-either starting mode, and within roughly a tenth of a second.
+The earbuds accepted `0x1804 01`, returned success, answered the transparency read with
+1 — and within about a tenth of a second that read returned 0 and stayed there. It did
+this from either starting mode.
 
-A device can therefore acknowledge a write, confirm it, and then abandon it. An
-immediate read-back proves the device took the command; only continued observation
-proves it kept it. Anything showing live state has to keep reading.
+**The cause is the charging case.** With both earbuds out, the same write holds
+indefinitely, from off and from ANC alike. With both in it always reverts. With one out
+it also reverts, so *both* must be out. The charger read at `0x0602` distinguishes the
+three cases directly — `01 01`, `01 00`, `00 00` — which makes it a usable precondition
+rather than guesswork.
+
+The general rule survives its explanation: a device can acknowledge a write, confirm
+it, and then abandon it. An immediate read-back proves the device took the command;
+only continued observation proves it kept it. Anything showing live state has to keep
+reading.
+
+One thing this does not cover: with the flag confirmed on and **both earbuds active**,
+the effect was reported audible in the right earbud only. So an inactive earbud does not
+explain it. The protocol carries a single transparency flag for the pair, and there is
+no per-earbud read here to compare it against — whether that is a gap in what this
+specification covers or a fault in the device is unresolved.
 
 ### `0x1a04` — set ANC · `0x1804` — set transparency
 

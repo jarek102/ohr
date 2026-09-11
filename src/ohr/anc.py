@@ -78,10 +78,12 @@ def request_submodes() -> Frame:
 
 
 def request_level() -> Frame:
-    """The level of whichever path is currently active. Empty payload.
+    """The level, read against whatever the flags currently are. Empty payload.
 
-    Not "the ANC level": with transparency on this mirrors the transparency level, and
-    otherwise it reports the ANC one. Read it alongside the flags or it means nothing.
+    With transparency off this is the ANC level. With transparency on it reads full
+    scale on both models — and that is *not* the transparency level, which has its own
+    read and was 0.75 on one of them at the time. Read this alongside the flags or it
+    means nothing.
     """
     return Frame(VENDOR_SENNHEISER, FEATURE_ANC, MessageType.COMMAND, OP_LEVEL)
 

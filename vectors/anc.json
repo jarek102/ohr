@@ -236,7 +236,7 @@
         "kind": "observed",
         "device": "accentum-wireless",
         "date": "2026-09-10",
-        "note": "Accepted by both models. It persisted on the over-ear model; on the earbuds it read back as set and then reverted within a second, with both buds charging in the case. See docs/protocol/commands.md."
+        "note": "Confirmed on both models. On the earbuds it holds only with both out of the charging case: in the case, or with one bud still in it, the flag reads back as set and then reverts within about a tenth of a second. See docs/protocol/commands.md."
       }
     },
     {
@@ -560,7 +560,7 @@
         "kind": "observed",
         "device": "momentum-tw4",
         "date": "2026-09-10",
-        "note": "Read while transparency was off and the feature 13 level read 0. The stored transparency level survives the mode being elsewhere."
+        "note": "Unmoved by the mode. Read 75 both while transparency was off and while it was on — and with it on the feature 13 level read 100, which is how the two reads are known not to be the same quantity."
       }
     },
     {

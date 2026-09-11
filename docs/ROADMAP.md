@@ -80,18 +80,24 @@ The first write ever sent to these devices.
 **Done when:** all three modes can be selected on both models, each confirmed by
 read-back, and the original state restored.
 
-**Outcome:** shipped, with one mode unproven and four findings.
+**Outcome:** shipped. All three modes selected and confirmed on both models, each
+restored afterwards — and four findings, the first of which took three attempts to run
+down.
 
-All three modes were selected and confirmed on the over-ear model, and *ANC* and *Off*
-on the earbuds, each restored afterwards. **Transparency on the earbuds is not proven.**
-The write was acknowledged, the read-back returned *on*, and a moment later the same
-read returned *off* and stayed there. Retried with one earbud out of its case, which
-the charger read confirmed, and it reverted identically — so the case alone does not
-explain it. Retry with both out and worn.
+**Transparency on the earbuds needs both out of the charging case.** The write was
+acknowledged, the read-back returned *on*, and a moment later the same read returned
+*off* and stayed there. With one earbud out it reverted identically; with both out it
+holds indefinitely, from either starting mode. The charger read tells the three cases
+apart — `01 01`, `01 00`, `00 00` — so it is a checkable precondition rather than a
+mystery.
 
-That is the first finding, and it outranks the milestone: **a confirmed read-back is
-not proof a setting persists.** A device can acknowledge a write, confirm it, and then
-abandon it. Immediate verification proves the command was taken, not kept.
+The general rule outlives its explanation, and outranks the milestone: **a confirmed
+read-back is not proof a setting persists.** A device can acknowledge a write, confirm
+it, and then abandon it. Immediate verification proves the command was taken, not kept.
+
+Still open, and outside what this protocol can answer: with the flag confirmed on and
+both earbuds active, the effect was audible in the right earbud only. There is one
+transparency flag for the pair and no per-earbud read to check it against.
 
 Second, and the one that cost the most: **the flags are coupled, one way.** Engaging
 ANC clears transparency — including when ANC is already on, so the side effect belongs
@@ -99,8 +105,10 @@ to the write. Turning ANC off does not touch it, and neither direction of transp
 touches ANC. Writing the level does clear it, being ANC engagement by another name.
 
 Third: **there are two levels, and two reads.** `0x1803` reports the transparency level
-and never moved across a full cycle of the three modes; `0x1a03` follows whichever path
-is active. A reading from the latter means nothing without the flags it was taken with.
+and never moved across a full cycle of the three modes. `0x1a03` reports the ANC level
+while transparency is off, and full scale while it is on — not the transparency level,
+which read 0.75 on the earbuds at the moment `0x1a03` said 1.00. A reading from the
+latter means nothing without the flags it was taken with.
 
 Fourth follows from the second, and was found the hard way: **skipping a write for a
 flag that already reads correctly is not safe.** An ANC-on write ahead of it clears the
