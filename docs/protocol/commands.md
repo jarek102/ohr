@@ -137,6 +137,11 @@ Observed: `01 ff` on the over-ear model, `05 ff` on the earbuds.
 
 ## Features 12 and 13 — noise control
 
+Both features follow the same layout, with each setter one operation below its getter:
+0 and 1 submodes, 2 and 3 level, 4 and 5 enabled. Operation 7 returns an **error frame**
+on both, so the pattern stops there rather than continuing — and it is a convenient
+demonstration that an unsupported operation is answered rather than ignored.
+
 **Two features, not one.** ANC is feature 13; transparency — letting outside sound
 through — is feature 12, with its own command. The user-facing choice between *ANC*,
 *Transparency* and *Off* is a combination of the two, not a single setting.
@@ -353,8 +358,17 @@ specification covers or a fault in the device is unresolved.
 Selecting the same mode from the earbuds' own controls produced an **identical**
 reading — all five of `0x1a05`, `0x1805`, `0x1801`, `0x1a03` and `0x1803` matched what
 the writes here produced. Whatever distinguishes the two, it is not visible in any state
-this specification covers. That change was also seen by an ordinary read with no
-subscription, so a client that polls will notice another controller's work.
+this specification covers.
+
+Changes made from the earbuds are reported faithfully, for both features: transparency
+selected there read `0x1805 = 1`, ANC selected there read `0x1a05 = 1`, each held
+across repeated polling. No subscription is involved, so a client that polls sees
+another controller's work — and these reads are a trustworthy account of what the
+device is doing, whoever asked for it.
+
+The asymmetry to note is in the *audio*, not the state: ANC engaged this way was
+reported audible in both earbuds, while transparency was reported in one. Both read
+identically on the wire.
 
 ### `0x1a04` — set ANC · `0x1804` — set transparency
 
