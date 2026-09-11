@@ -153,8 +153,12 @@
     {
       "id": "stream-single-frame",
       "kind": "stream",
-      "chunks": ["ff0300010495070346"],
-      "frames": ["ff0300010495070346"],
+      "chunks": [
+        "ff0300010495070346"
+      ],
+      "frames": [
+        "ff0300010495070346"
+      ],
       "remainder": "",
       "provenance": {
         "kind": "constructed",
@@ -164,8 +168,13 @@
     {
       "id": "stream-split-mid-header",
       "kind": "stream",
-      "chunks": ["ff0300", "010495070346"],
-      "frames": ["ff0300010495070346"],
+      "chunks": [
+        "ff0300",
+        "010495070346"
+      ],
+      "frames": [
+        "ff0300010495070346"
+      ],
       "remainder": "",
       "provenance": {
         "kind": "constructed",
@@ -175,8 +184,14 @@
     {
       "id": "stream-split-mid-payload",
       "kind": "stream",
-      "chunks": ["ff03000304950703", "50ff", "32"],
-      "frames": ["ff0300030495070350ff32"],
+      "chunks": [
+        "ff03000304950703",
+        "50ff",
+        "32"
+      ],
+      "frames": [
+        "ff0300030495070350ff32"
+      ],
       "remainder": "",
       "provenance": {
         "kind": "constructed",
@@ -186,8 +201,13 @@
     {
       "id": "stream-two-frames-one-read",
       "kind": "stream",
-      "chunks": ["ff0300010495070346ff0300020495070e01ff"],
-      "frames": ["ff0300010495070346", "ff0300020495070e01ff"],
+      "chunks": [
+        "ff0300010495070346ff0300020495070e01ff"
+      ],
+      "frames": [
+        "ff0300010495070346",
+        "ff0300020495070e01ff"
+      ],
       "remainder": "",
       "provenance": {
         "kind": "constructed",
@@ -197,8 +217,12 @@
     {
       "id": "stream-trailing-partial",
       "kind": "stream",
-      "chunks": ["ff0300010495070346ff030002"],
-      "frames": ["ff0300010495070346"],
+      "chunks": [
+        "ff0300010495070346ff030002"
+      ],
+      "frames": [
+        "ff0300010495070346"
+      ],
       "remainder": "ff030002",
       "provenance": {
         "kind": "constructed",
@@ -208,8 +232,12 @@
     {
       "id": "stream-leading-garbage",
       "kind": "stream",
-      "chunks": ["00112233ff0300010495070346"],
-      "frames": ["ff0300010495070346"],
+      "chunks": [
+        "00112233ff0300010495070346"
+      ],
+      "frames": [
+        "ff0300010495070346"
+      ],
       "remainder": "",
       "provenance": {
         "kind": "constructed",
@@ -225,6 +253,94 @@
       "provenance": {
         "kind": "constructed",
         "rationale": "Degenerate case; must not raise."
+      }
+    },
+    {
+      "id": "error-operation-not-supported",
+      "kind": "frame",
+      "bytes": "ff03000104951b8f01",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "error",
+      "operation": 15,
+      "payload": "01",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Both models answered this way for a nonsense operation on a feature they do have, on features 0, 12 and 13 alike. The error is a reply: it correlates to the request like a response does."
+      }
+    },
+    {
+      "id": "error-feature-not-supported",
+      "kind": "frame",
+      "bytes": "ff03000104953d8100",
+      "vendor": 1173,
+      "feature": 30,
+      "type": "error",
+      "operation": 1,
+      "payload": "00",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Feature 30 is advertised by neither device. The over-ear model answered the same way for feature 14, which it does not advertise, while the earbuds answered 1 for the same request — so the reason byte agrees with the feature map without being read from it."
+      }
+    },
+    {
+      "id": "error-reason-operation",
+      "kind": "payload",
+      "command": "error_reason",
+      "payload": "01",
+      "decoded": {
+        "value": 1,
+        "name": "operation_not_supported"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10"
+      }
+    },
+    {
+      "id": "error-reason-feature",
+      "kind": "payload",
+      "command": "error_reason",
+      "payload": "00",
+      "decoded": {
+        "value": 0,
+        "name": "feature_not_supported"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-10",
+        "note": "Returned for feature 14, which this model does not advertise."
+      }
+    },
+    {
+      "id": "error-reason-unknown-kept-raw",
+      "kind": "payload",
+      "command": "error_reason",
+      "payload": "7f",
+      "decoded": {
+        "value": 127,
+        "name": null
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The set of reasons is not known to be closed. An unrecognised one keeps its value and a null name rather than being rejected, because an error about an error helps nobody."
+      }
+    },
+    {
+      "id": "error-reason-empty-is-invalid",
+      "kind": "payload",
+      "command": "error_reason",
+      "payload": "",
+      "error": "invalid_value",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Every observed error reply carried a reason byte. An empty one cannot be read as reason zero, which would claim the feature is absent."
       }
     }
   ]

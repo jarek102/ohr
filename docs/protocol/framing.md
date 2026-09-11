@@ -74,6 +74,27 @@ An **error is a reply**. A type-3 frame with the matching feature and operation 
 answer to the request; it just is not a success. Treat it as *state unknown, re-read*,
 not as a failure to transmit.
 
+### The reason byte
+
+An error payload is one byte:
+
+| Value | Meaning |
+|---|---|
+| 0 | feature not supported |
+| 1 | operation not supported |
+
+That distinction makes an error frame a **capability probe that does not depend on the
+feature map**. Ask about a feature a device never advertised and it answers 0; ask about
+one it did advertise, with an operation it does not have, and it answers 1.
+
+Both models were sent nonsense operations on features 0, 12 and 13, and both answered 1
+every time. Sent the same request on feature 30, which neither advertises, both
+answered 0. Sent it on feature 14, the earbuds answered 1 and the over-ear model 0 —
+matching exactly which of them lists that feature. The reason agrees with the feature
+map without being read from it.
+
+Unrecognised values are kept raw: the set of reasons is not known to be closed.
+
 ## Writes
 
 No setter in this protocol returns meaningful state. Setters reply with an

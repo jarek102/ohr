@@ -146,9 +146,13 @@ Observed: `01 ff` on the over-ear model, `05 ff` on the earbuds.
 ## Features 12 and 13 — noise control
 
 Both features follow the same layout, with each setter one operation below its getter:
-0 and 1 submodes, 2 and 3 level, 4 and 5 enabled. Operation 7 returns an **error frame**
-on both, so the pattern stops there rather than continuing — and it is a convenient
-demonstration that an unsupported operation is answered rather than ignored.
+0 and 1 submodes, 2 and 3 level, 4 and 5 enabled. Operation 7 returns an error on both,
+so the pattern stops there rather than continuing.
+
+**That layout is local to these two features.** Elsewhere the numbering carries no such
+rule — feature 3 reads the charger at operation 2 and battery types at operation 14,
+both even; feature 10 reads at 0 and 1 and then *disconnects* at 3. Do not use parity
+to guess whether an unknown operation is safe to send.
 
 **Two features, not one.** ANC is feature 13; transparency — letting outside sound
 through — is feature 12, with its own command. The user-facing choice between *ANC*,

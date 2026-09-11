@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from ohr import Frame, MessageType, anc, battery, connections, equaliser, features
+from ohr.frame import decode_error_reason
 from ohr import parse_frames
 from ohr.errors import InvalidLength, InvalidValue
 
@@ -93,6 +94,7 @@ def _battery_level(r: battery.BatteryLevel) -> dict:
 
 
 COMMANDS = {
+    "error_reason": (decode_error_reason, lambda r: {"value": r[0], "name": r[1]}),
     "battery_level": (battery.decode_level, _battery_level),
     "battery_types": (battery.decode_types, lambda r: {"first": r.first, "second": r.second}),
     "battery_charger": (battery.decode_charger, lambda r: {"first": r.first, "second": r.second}),

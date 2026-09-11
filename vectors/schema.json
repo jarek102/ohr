@@ -215,6 +215,7 @@
               "provenance": true,
               "command": {
                 "enum": [
+                  "error_reason",
                   "battery_level",
                   "battery_types",
                   "battery_charger",

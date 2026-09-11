@@ -39,6 +39,32 @@ class MessageType(enum.IntEnum):
     ERROR = 3
 
 
+#: Why an :attr:`MessageType.ERROR` reply was sent. One byte, and the two values below
+#: are the ones observed — anything else is kept raw rather than guessed at.
+ERROR_REASONS: dict[int, str] = {
+    0: "feature_not_supported",
+    1: "operation_not_supported",
+}
+
+
+def decode_error_reason(payload: bytes) -> tuple[int, str | None]:
+    """Decode an error reply's payload as ``(value, name)``.
+
+    The distinction is more useful than it looks. *Feature not supported* and
+    *operation not supported* separate "this device cannot do this at all" from "this
+    device does this, but not the way you asked" — which makes an error reply a
+    **capability probe that does not depend on the feature map**. Asking a device about
+    a feature it never advertised returns 0; asking about one it did, with an operation
+    it does not have, returns 1.
+
+    An unrecognised value keeps a ``None`` name. The set of reasons a device can give
+    is not known to be closed.
+    """
+    if not payload:
+        raise InvalidValue("error reply carried no reason byte")
+    return payload[0], ERROR_REASONS.get(payload[0])
+
+
 def pack_word(feature: int, type: MessageType, operation: int) -> int:
     """Build a command word from its three fields."""
     if not 0 <= feature <= 0x7F:
