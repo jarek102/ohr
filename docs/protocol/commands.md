@@ -29,6 +29,14 @@ not evidence that anything changed.
 | `0x1803` | Transparency level | empty |
 | `0x1a03` | Active level | empty |
 | `0x1a05` | ANC enabled | empty |
+| `0x0401` | On-head detection setting | empty |
+| `0x0800` | Negotiated codec | empty |
+| `0x0802` | Tone and voice prompts | empty |
+| `0x0807` | Prompt language | empty |
+| `0x1201` | Firmware version, wide encoding | empty |
+| `0x1202` | Firmware version | empty |
+| `0x1205` | Charging-case serial | empty |
+| `0x1206` | Product name | empty |
 
 Writes:
 
@@ -298,6 +306,108 @@ Clamp to the range from `0x1000`, not to the range the encoding could carry.
 ### `0x1009` — bass boost
 
 Empty payload. Reply is one byte: 0 off, 1 on.
+
+## Feature 4 — general audio, beyond the equaliser
+
+Feature 4 is large and mostly uncharacterised. Its layout is **the opposite of noise
+control's**: the setter sits one *below* its getter, so even operations read and odd
+ones write. Features 12 and 13 do the reverse. There is no rule to carry between them.
+
+### `0x0800` — negotiated codec
+
+Empty payload. One byte.
+
+| Value | | Value | | Value |
+|---|---|---|---|---|
+| 0 sbc | | 5 aptX HD | | 10 LC3 |
+| 1 aac | | 6 faststream | | 11 usb |
+| 2 aptX | | 7 lhdc | | 12 aptX Voice |
+| 3 aptX LL | | 8 aptX Adaptive | | 13 aptX Lite |
+| 4 mp3 | | 9 aptX Lossless | | 14 LC3 gaming |
+
+and three that are not codecs: **240 a call is in progress**, 254 unknown, 255 no
+stream.
+
+**This is live state, not a capability.** With nothing playing, both models answer 255.
+Read once at connect time it says nothing about what the device supports, and a client
+that maps the byte straight to a label will cheerfully display "call ongoing" as a codec.
+
+Confirmed against the host's own Bluetooth stack rather than against itself: with audio
+playing, the earbuds answered 2 while the host reported aptX for that link, and the
+over-ear model answered 5 while the host reported aptX HD.
+
+`0x081e` was expected to carry the codec *and a sample rate*. Neither model implements
+it — both answer *operation not supported*.
+
+### `0x0802` — tone and voice prompts · `0x0807` — prompt language
+
+Empty payload, one byte each.
+
+| `0x0802` | | `0x0807` |
+|---|---|---|
+| 0 off | | 0 english, 1 german, 2 french, 3 spanish |
+| 1 tones only | | 4 chinese, 5 japanese, 6 russian |
+| 2 tones and voice | | |
+
+`0x0802` is worth reading before writing anything. Several setters here are **audible**,
+and this says whether the device will actually make the sound — it turns "a write may be
+heard" from a caveat into something a client can check. Both observed devices read 2.
+
+## Feature 2 — on-head detection
+
+### `0x0401` — is on-head detection enabled
+
+Empty payload. One byte, and **the polarity is inverted**: `0` means *on*, `1` means
+*off*. Every other flag in this protocol uses zero for off.
+
+That is established rather than assumed: the earbuds answered 1 while the vendor
+application showed their equivalent setting switched off, and the over-ear model
+answered 0.
+
+This is the **setting**, not the live physical state — it says whether the device is
+watching, not whether it is being worn. No command for the live state is confirmed.
+
+## Feature 9 — versions and identity
+
+Every command here is a read with an empty payload.
+
+### `0x1202` — firmware version
+
+**Six bytes on both models, not three**, decoded as one version per three bytes:
+`major, minor, patch`.
+
+| Device | Payload | Reads as |
+|---|---|---|
+| over-ear | `03 22 00 00 00 00` | 3.34.0, then a zero triple |
+| earbuds | `05 16 01 05 16 01` | 5.22.1 twice — one per earbud |
+
+Both were checked against the versions the vendor application displayed, which is what
+makes the field order certain rather than plausible.
+
+A decoder that reads only the first triple gets the version right and misses the
+per-earbud field — **the only place anywhere in this protocol where the two buds are
+distinguished from one another.** If a device ever returns two *differing* triples, that
+is a thread worth pulling: several open questions about per-bud state have nowhere else
+to go.
+
+### `0x1201` — the same version, wider
+
+Three 16-bit big-endian fields: `00 03 00 22 00 00` is 3.34.0. A different encoding of
+the same number, not a different version — useful as a free cross-check on a decoder
+written from scratch.
+
+### `0x1206` — product name
+
+NUL-terminated text: `ACAEBT Black`, `MTW4 Graphite`. Model and finish — a property of
+the product, not of its owner.
+
+### `0x1205` — charging-case serial
+
+Four bytes. A model with no case answers with zeroes rather than refusing.
+
+Treat the value as **personal data**: it identifies one physical object belonging to one
+person. It is not published here, and a client should not render or log it without a
+reason.
 
 ## Feature 10 — device management
 

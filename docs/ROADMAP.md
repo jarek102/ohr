@@ -283,25 +283,21 @@ Things known to exist because a device does them, with no command identified yet
 Listed because a lead with a known right answer is much cheaper to chase than one
 without.
 
-**The negotiated codec.** The devices report it — a codec name and a sample rate, or no
-stream at all. This is the highest-value one: it would let the finding that control
-traffic degrades audio be *measured* rather than heard, and it bears directly on the
-call problems that started this work.
+Four of these are now **found and specified** — the codec, the firmware version, the
+prompts setting and the on-head detection setting. What remains:
 
-**Firmware version.** Feature 9 is `versions` and both devices advertise it. The answer
-is already known for each — `3.34.0` on the over-ear model, `5.22.1` on the earbuds — so
-whatever read produces those numbers is self-evidently the right one. A rare case of
-having the oracle before the command.
+**The live wear state.** The setting is readable; whether the device is *currently being
+worn* is not. That is the missing piece behind two open questions: why transparency will
+not hold with an earbud in the case, and whether an earbud can be out but not joined.
 
-**Wear detection.** The earbuds pause on removal, so they know. That is the missing
-piece behind two open questions: why transparency will not hold with an earbud in the
-case, and whether an earbud can be out but not joined.
+**Per-earbud identity.** The firmware read returns one version per earbud — the only
+field anywhere in this protocol that separates the two. Both currently report the same
+version, so it proves the channel exists without yet carrying anything.
 
-**Per-device settings** — auto power off, tone and voice prompts, battery protection,
-audio mode priority. The prompts one is not cosmetic: it decides whether writes are
-audible. Being a setting, it is state, and state here is readable — so "a client cannot
-know whether a write will be heard" is a statement about this specification's coverage,
-not about the protocol.
+**The rest of feature 4.** Roughly thirty operations, mostly uncharacterised: volume,
+sidetone, auto-answer, gaming mode, mono downmix, volume limit. Several can be named
+without sending a single write, by changing the setting in the vendor application and
+re-reading over the wire.
 
 ## Not planned
 

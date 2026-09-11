@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "codec-aptx",
+      "kind": "payload",
+      "command": "codec",
+      "payload": "02",
+      "decoded": {
+        "value": 2,
+        "name": "aptx"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "Read while audio was playing. The host Bluetooth stack independently reported aptX for the same link at the same moment, which is what confirms the enum value rather than the command alone."
+      }
+    },
+    {
+      "id": "codec-aptx-hd",
+      "kind": "payload",
+      "command": "codec",
+      "payload": "05",
+      "decoded": {
+        "value": 5,
+        "name": "aptx_hd"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Read while a tone was playing; the host stack reported aptX-HD for the same link."
+      }
+    },
+    {
+      "id": "codec-no-stream",
+      "kind": "payload",
+      "command": "codec",
+      "payload": "ff",
+      "decoded": {
+        "value": 255,
+        "name": "no_stream"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Both models answer this with nothing playing. So the command reports live state, not capability — read once at connect time it says nothing about what the device supports."
+      }
+    },
+    {
+      "id": "codec-unknown-value-kept",
+      "kind": "payload",
+      "command": "codec",
+      "payload": "7b",
+      "decoded": {
+        "value": 123,
+        "name": null
+      },
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The list grows with firmware. An unrecognised codec keeps its number and a null name rather than being rejected."
+      }
+    },
+    {
+      "id": "prompts-tones-and-voice",
+      "kind": "payload",
+      "command": "prompts",
+      "payload": "02",
+      "decoded": {
+        "value": 2,
+        "name": "tones_and_voice"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Both models read 2, matching the vendor application showing tone and voice prompts enabled. This is the read that tells a client whether its writes will be heard."
+      }
+    },
+    {
+      "id": "prompts-invalid",
+      "kind": "payload",
+      "command": "prompts",
+      "payload": "03",
+      "error": "invalid_value",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Three defined values and no more. Accepting a fourth would let a client conclude the device is silent when it is not."
+      }
+    },
+    {
+      "id": "prompt-language-english",
+      "kind": "payload",
+      "command": "prompt_language",
+      "payload": "00",
+      "decoded": {
+        "value": 0,
+        "name": "english"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "Both models read 0, against English shown in the vendor application."
+      }
+    }
+  ]
+}

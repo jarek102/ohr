@@ -232,7 +232,15 @@
                   "conn_paired_count",
                   "conn_own_index",
                   "conn_max_connections",
-                  "conn_peer"
+                  "conn_peer",
+                  "fw_version",
+                  "fw_version_wide",
+                  "product_name",
+                  "case_serial",
+                  "on_head_detection",
+                  "codec",
+                  "prompts",
+                  "prompt_language"
                 ]
               },
               "payload": {

@@ -86,9 +86,18 @@ def _cmd_status(args: argparse.Namespace) -> int:
 
 def _probe_plan() -> list[tuple[str, object, object]]:
     """Every read this library knows, as (label, request, decoder)."""
-    from . import anc, connections, equaliser
+    from . import anc, audio, connections, device, equaliser
 
     return [
+        ("device.version", device.request_version(), device.decode_versions),
+        ("device.version_wide", device.request_version_wide(), device.decode_version_wide),
+        ("device.product_name", device.request_product_name(), device.decode_product_name),
+        ("device.on_head_detect", device.request_on_head_detection(),
+         device.decode_on_head_detection),
+        ("audio.codec", audio.request_codec(), audio.decode_codec),
+        ("audio.prompts", audio.request_prompts(), audio.decode_prompts),
+        ("audio.prompt_language", audio.request_prompt_language(),
+         audio.decode_prompt_language),
         ("battery.level", battery.request_level(), battery.decode_level),
         ("battery.types", battery.request_types(), battery.decode_types),
         ("battery.charger", battery.request_charger(), battery.decode_charger),

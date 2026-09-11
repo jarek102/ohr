@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ohr import Frame, MessageType, anc, battery, connections, equaliser, features
+from ohr import Frame, MessageType, anc, audio, battery, connections, device, equaliser, features
 from ohr.frame import decode_error_reason
 from ohr import parse_frames
 from ohr.errors import InvalidLength, InvalidValue
@@ -21,7 +21,7 @@ from ohr.errors import InvalidLength, InvalidValue
 VECTORS = Path(__file__).resolve().parents[1] / "vectors"
 
 PAYLOAD_FILES = ("battery.json", "features.json", "anc.json", "equaliser.json",
-                 "connections.json")
+                 "connections.json", "device.json", "audio.json")
 ALL_FILES = ("framing.json", *PAYLOAD_FILES)
 
 ERRORS = {"invalid_length": InvalidLength, "invalid_value": InvalidValue}
@@ -95,6 +95,14 @@ def _battery_level(r: battery.BatteryLevel) -> dict:
 
 COMMANDS = {
     "error_reason": (decode_error_reason, lambda r: {"value": r[0], "name": r[1]}),
+    "fw_version": (device.decode_versions, lambda r: {"versions": [str(v) for v in r]}),
+    "fw_version_wide": (device.decode_version_wide, lambda r: {"version": str(r)}),
+    "product_name": (device.decode_product_name, lambda r: {"name": r}),
+    "case_serial": (device.decode_case_serial, lambda r: {"serial": r.hex()}),
+    "on_head_detection": (device.decode_on_head_detection, lambda r: {"enabled": r}),
+    "codec": (audio.decode_codec, lambda r: {"value": r[0], "name": r[1]}),
+    "prompts": (audio.decode_prompts, lambda r: {"value": r[0], "name": r[1]}),
+    "prompt_language": (audio.decode_prompt_language, lambda r: {"value": r[0], "name": r[1]}),
     "battery_level": (battery.decode_level, _battery_level),
     "battery_types": (battery.decode_types, lambda r: {"first": r.first, "second": r.second}),
     "battery_charger": (battery.decode_charger, lambda r: {"first": r.first, "second": r.second}),

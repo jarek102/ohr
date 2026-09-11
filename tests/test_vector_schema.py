@@ -44,6 +44,7 @@ def test_every_vector_file_is_covered() -> None:
     assert {p.name for p in FILES} == {
         "framing.json", "battery.json", "features.json",
         "anc.json", "equaliser.json", "connections.json",
+        "device.json", "audio.json",
     }, (
         "vector files changed — add the new one to the runner in test_vectors.py too, "
         "or it will validate but never execute"

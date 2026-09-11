@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "version-over-ear",
+      "kind": "payload",
+      "command": "fw_version",
+      "payload": "032200000000",
+      "decoded": {
+        "versions": [
+          "3.34.0",
+          "0.0.0"
+        ]
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Six bytes, not three: the version followed by a zero triple. The vendor application displayed 3.34.0 for this device, which is what makes the first triple's reading certain rather than plausible."
+      }
+    },
+    {
+      "id": "version-earbuds-per-bud",
+      "kind": "payload",
+      "command": "fw_version",
+      "payload": "051601051601",
+      "decoded": {
+        "versions": [
+          "5.22.1",
+          "5.22.1"
+        ]
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "The same version twice, one per earbud, against 5.22.1 shown in the vendor application. A decoder reading only the first triple would be right and would miss the only field anywhere in this protocol that separates the two buds."
+      }
+    },
+    {
+      "id": "version-truncated-is-invalid",
+      "kind": "payload",
+      "command": "fw_version",
+      "payload": "0322",
+      "error": "invalid_length",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "Two bytes cannot carry major, minor and patch. Accepting them would report a patch level of zero that the device never sent."
+      }
+    },
+    {
+      "id": "version-wide-over-ear",
+      "kind": "payload",
+      "command": "fw_version_wide",
+      "payload": "000300220000",
+      "decoded": {
+        "version": "3.34.0"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "The same version as the other encoding, as three 16-bit big-endian fields. Two commands that must agree are a free check on a decoder written from scratch."
+      }
+    },
+    {
+      "id": "version-wide-earbuds",
+      "kind": "payload",
+      "command": "fw_version_wide",
+      "payload": "000500160001",
+      "decoded": {
+        "version": "5.22.1"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12"
+      }
+    },
+    {
+      "id": "product-name-over-ear",
+      "kind": "payload",
+      "command": "product_name",
+      "payload": "41434145425420426c61636b00",
+      "decoded": {
+        "name": "ACAEBT Black"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Model and finish, NUL-terminated. A property of the product, not of its owner."
+      }
+    },
+    {
+      "id": "product-name-earbuds",
+      "kind": "payload",
+      "command": "product_name",
+      "payload": "4d54573420477261706869746500",
+      "decoded": {
+        "name": "MTW4 Graphite"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12"
+      }
+    },
+    {
+      "id": "case-serial-absent",
+      "kind": "payload",
+      "command": "case_serial",
+      "payload": "00000000",
+      "decoded": {
+        "serial": "00000000"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "A model with no charging case answers with zeroes rather than refusing. The earbuds return four non-zero bytes; that value is not published, because it identifies one physical object belonging to one person."
+      }
+    },
+    {
+      "id": "on-head-detection-on",
+      "kind": "payload",
+      "command": "on_head_detection",
+      "payload": "00",
+      "decoded": {
+        "enabled": true
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Zero means ON here, inverted against every other flag in this protocol."
+      }
+    },
+    {
+      "id": "on-head-detection-off",
+      "kind": "payload",
+      "command": "on_head_detection",
+      "payload": "01",
+      "decoded": {
+        "enabled": false
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "One means off. Confirmed against the vendor application, which showed this device's smart-pause setting switched off at the same moment. That pairing is what establishes the inversion rather than assuming it."
+      }
+    },
+    {
+      "id": "on-head-detection-invalid",
+      "kind": "payload",
+      "command": "on_head_detection",
+      "payload": "02",
+      "error": "invalid_value",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "A two-valued field with inverted polarity is the worst place to accept a third value: a truthiness test would already have the sense backwards."
+      }
+    }
+  ]
+}
