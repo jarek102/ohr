@@ -167,7 +167,14 @@ def request_capability_probe(feature: int) -> Frame:
 
     Feature numbers above :data:`HIGHEST_ANSWERING_FEATURE` do not answer at all, so a
     sweep over the whole seven-bit range spends most of its time waiting for timeouts
-    that mean nothing.
+    that mean nothing. **Stop at 31.**
+
+    That is not only about speed. A full sweep with a one-second timeout holds the
+    control channel for roughly two minutes, and running one while audio was playing
+    was followed by an audible drop in quality that disconnecting and reconnecting
+    cleared — consistent with the codec having renegotiated downwards under the
+    contention. Control traffic and the audio link share a radio. Sweep when nothing is
+    playing, and keep ordinary polling modest.
     """
     if not 0 <= feature <= 0x7F:
         raise InvalidValue(f"feature out of range: {feature}")

@@ -114,6 +114,17 @@ unsupported.** A device that lacks a feature says so, in about a millisecond. On
 says nothing is either out of range, wedged, or busy — and at least one model here is
 known to ignore a first request and answer a retry.
 
+### The control channel is not free
+
+Stop a sweep at 31. Beyond the wasted time, the sweep that established the boundary
+above held the channel for about two minutes, and **the audio noticeably degraded while
+it ran** — cleared by disconnecting and reconnecting, which is what a codec
+renegotiating downwards under contention would look like.
+
+Control traffic and the audio link share a radio. Probe when nothing is playing, keep
+routine polling modest, and treat a burst of requests as something with a cost to the
+person listening rather than a free way to learn about the device.
+
 ## Writes
 
 No setter in this protocol returns meaningful state. Setters reply with an
