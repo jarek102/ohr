@@ -401,9 +401,14 @@ transparency at all.
 
 **And none of it is a fixed property.** Both devices carry a *tone and voice prompts*
 setting, with a language, which the owner can change — so the table above describes two
-headsets as they were configured, not the protocol. A client cannot know whether a write
-will be heard. Treat "may be audible" as the rule and never send a write that changes
-nothing; that is correct regardless of how the device is set up.
+headsets as they were configured, not the protocol.
+
+That setting is device state, which on these devices means it is almost certainly
+**readable**, and the command for it simply has not been found yet. So a client cannot
+know whether a write will be heard *today*; it is not a thing that must stay unknowable.
+Until then, treat "may be audible" as the rule and never send a write that changes
+nothing — which is correct however the device is configured, and stays correct once the
+setting can be read.
 
 This matters because an audible write is not the private, idempotent thing a read is.
 Repeating one has a cost, and the person paying it is wearing the device. So: never

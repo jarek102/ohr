@@ -299,7 +299,9 @@ case, and whether an earbud can be out but not joined.
 
 **Per-device settings** — auto power off, tone and voice prompts, battery protection,
 audio mode priority. The prompts one is not cosmetic: it decides whether writes are
-audible, which is currently a caveat on a rule this library enforces.
+audible. Being a setting, it is state, and state here is readable — so "a client cannot
+know whether a write will be heard" is a statement about this specification's coverage,
+not about the protocol.
 
 ## Not planned
 
