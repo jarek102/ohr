@@ -191,6 +191,11 @@ def request_set_level(level: float) -> Frame:
     means selecting ANC. A caller must re-read the flags afterwards, not just the
     level.
 
+    **Silent**, despite engaging ANC — unlike the ANC flag and submode writes, which
+    both announce themselves. Nor was any audible difference reported between a level
+    of 10 and a level of 100 on the over-ear model, so what this changes is not obvious
+    from listening.
+
     Rejects anything outside 0.0–1.0 rather than clamping: a caller asking for 1.5 has
     a bug, and silently writing full scale would hide it.
     """
@@ -208,8 +213,12 @@ def request_set_level(level: float) -> Frame:
 def request_set_submode(identifier: int, state: int) -> Frame:
     """Set one submode. Payload is ``(identifier, state)``.
 
+    **Audible**, like the ANC flag and unlike the level: every submode change plays a
+    tone. So this is a write to send only when something is actually changing.
+
     The accepted range of ``state`` differs per submode and is not advertised by any
-    read, so it is not validated here beyond fitting in a byte. Verify by read-back.
+    read, so it is not validated here beyond fitting in a byte. Verify by read-back —
+    there is no read for a single submode, so :func:`plan_submode` re-reads them all.
     """
     if not 0 <= identifier <= 0xFF:
         raise InvalidValue(f"submode identifier out of range: {identifier}")

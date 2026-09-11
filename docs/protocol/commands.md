@@ -333,29 +333,48 @@ confirmed by reading the setting back.
 
 ### The acknowledgement carries no state
 
-A setter replies with an empty acknowledgement. It says the frame was received. It does
-not say the setting changed, and there is no field in it that could. **Every write must
-be verified by a read.**
+A setter replies with the **same feature and operation, type raised to response, and an
+empty payload**:
+
+| Write | Acknowledgement |
+|---|---|
+| `0x1a04` set ANC | `ff 03 0000 0495 1b04` |
+| `0x1a02` set level | `ff 03 0000 0495 1b02` |
+| `0x1a00` set submode | `ff 03 0000 0495 1b00` |
+| `0x1804` set transparency | `ff 03 0000 0495 1904` |
+
+That is the entire reply. It says the frame was received; it does not say the setting
+changed, and there is **no field in it that could**. So every write must be verified by
+a read.
+
+Note how little distinguishes the ANC and transparency acknowledgements — one bit of
+the feature field. Correlating a reply by operation alone would match the wrong one.
 
 An error reply is also an answer, and it means the setting is now *unknown* rather than
 unchanged — so read it back after one of those too.
 
-### The ANC write is audible; the transparency write is not
+### Some writes are audible
 
-Both models play a **tone in the wearer's ears** when ANC changes, going on and going
-off alike. Transparency is silent in both directions, on both models.
+Half of these announce themselves with a **tone in the wearer's ears**:
 
-That asymmetry is worth stating precisely, because it is the one write here that is not
-the private, idempotent thing a read is. Repeating it has a cost, and the person paying
-it is wearing the device.
+| Write | Sound |
+|---|---|
+| `0x1a04` set ANC, either direction | tone |
+| `0x1a00` set submode, any submode, either direction | tone |
+| `0x1a02` set level | silent |
+| `0x1804` set transparency, either direction | silent |
 
-So: never write a flag that already holds the value being asked for. Build every
-sequence from a fresh read and send only what differs. An empty sequence — *already
-there* — is a correct answer, and a client that treats it as a failure and writes
-anyway will beep at someone for nothing.
+The pattern is that the device announces a **discrete change to what ANC is doing** —
+on, off, or which submode — and says nothing about a continuous parameter or about
+transparency. `0x1a02` is silent despite engaging ANC, which is the one result that
+does not follow from the rule; and no audible difference was reported between a level
+of 10 and a level of 100, so what that command changes is not obvious by ear either.
 
-Whether `0x1a02` is audible has not been established. It engages ANC, so expect that it
-is until someone listens.
+This matters because an audible write is not the private, idempotent thing a read is.
+Repeating one has a cost, and the person paying it is wearing the device. So: never
+write a value that is already set. Build every sequence from a fresh read and send only
+what differs. An empty sequence — *already there* — is a correct answer, and a client
+that treats it as a failure and writes anyway will beep at someone for nothing.
 
 One tone can be unavoidable: selecting ANC from anywhere else requires the ANC write,
 and there is no silent route to it.
@@ -461,10 +480,13 @@ Availability is a per-product decision that no read exposes — a device need no
 One byte, in hundredths, matching the read encoding: 0.5 is 50. Confirmed on the
 over-ear model at 0, 40, 50 and 100.
 
+Confirmed at 10, 50, 90 and 100 on both models.
+
 **This write also clears the transparency flag**, the same way `0x1a04 01` does, and
 for what looks like the same reason: it engages ANC. Writing the level the device
 already reported still moved it out of transparency, so the side effect follows the
-write itself, not a change of value.
+write itself, not a change of value. It is nonetheless **silent**, which is the one
+place the audibility rule does not follow from the coupling.
 
 Taken with the two stored levels described under `0x1a03`, this is *set the ANC level* —
 which necessarily means selecting ANC. It does not touch the transparency level, which
@@ -475,11 +497,16 @@ undo that replays only the field it set will leave the device somewhere it never
 
 ### `0x1a00` — set submode
 
-Identifier then state, the same pairing `0x1a01` returns. Not yet sent to hardware.
+Identifier then state, the same pairing `0x1a01` returns. Confirmed on the earbuds for
+all three submodes in both directions: anti-wind was driven to 0 and 1 repeatedly, and
+the submode read afterwards agreed.
+
+**Audible**, unlike the level setter on the same feature.
 
 There is no read for a single submode: verify by re-reading all of them, which also
 shows whether the device moved another submode in response. Accepted state ranges
-differ per submode and are not advertised by any read.
+differ per submode and are not advertised by any read — anti-wind is known to take
+more than two values, so treat 0 and 1 as confirmed rather than as the whole range.
 
 ## Not yet specified
 

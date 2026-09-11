@@ -297,8 +297,10 @@
       "operation": 0,
       "payload": "0301",
       "provenance": {
-        "kind": "constructed",
-        "rationale": "A submode write is an identifier and a state, in that order — the same pairing the submode read returns."
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Sent to the earbuds and acknowledged. Anti-wind was driven the same way in both directions and the submode read confirmed the change, so the identifier-then-state order is verified rather than assumed."
       }
     },
     {
@@ -628,6 +630,86 @@
       "provenance": {
         "kind": "constructed",
         "rationale": "An empty plan is the correct answer for a mode already selected, and must be reported as 'already there' rather than as a failure to build one. The alternative is a redundant ANC write, which is the one setter here that beeps at the wearer."
+      }
+    },
+    {
+      "id": "ack-set-anc",
+      "kind": "frame",
+      "bytes": "ff03000004951b04",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "response",
+      "operation": 4,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "The reply to an ANC setter. Same feature and operation as the request with the type raised to response, and an empty payload — there is no field here that could report what the setting became."
+      }
+    },
+    {
+      "id": "ack-set-transparency",
+      "kind": "frame",
+      "bytes": "ff03000004951904",
+      "vendor": 1173,
+      "feature": 12,
+      "type": "response",
+      "operation": 4,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "The reply to a transparency setter, on feature 12. Identical in shape to the ANC one, which is why correlating a reply by feature as well as operation matters."
+      }
+    },
+    {
+      "id": "ack-set-level",
+      "kind": "frame",
+      "bytes": "ff03000004951b02",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "response",
+      "operation": 2,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "The reply to a level setter. Empty, like the others, so a client that treats a successful write as a successful change has no evidence for it."
+      }
+    },
+    {
+      "id": "ack-set-submode",
+      "kind": "frame",
+      "bytes": "ff03000004951b00",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "response",
+      "operation": 0,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "The reply to a submode setter."
+      }
+    },
+    {
+      "id": "write-submode-anti-wind-off",
+      "kind": "frame",
+      "bytes": "ff03000204951a000100",
+      "vendor": 1173,
+      "feature": 13,
+      "type": "command",
+      "operation": 0,
+      "payload": "0100",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Anti-wind is identifier 1. Sent, acknowledged, and confirmed by reading the submode list back — it had been 1 and read 0 afterwards."
       }
     }
   ]
