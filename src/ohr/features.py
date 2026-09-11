@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .errors import InvalidValue
 from .frame import Frame, MessageType, VENDOR_SENNHEISER
 
 FEATURE_CORE = 0
@@ -136,3 +137,38 @@ def request_continuation() -> Frame:
     return Frame(
         VENDOR_SENNHEISER, FEATURE_CORE, MessageType.COMMAND, OP_FEATURE_LIST_CONTINUATION
     )
+
+
+#: Feature numbers above this answer nothing at all on the observed devices — not an
+#: error, no reply. The field is seven bits wide; only the low five are live.
+HIGHEST_ANSWERING_FEATURE = 31
+
+#: An operation that exists on no feature of either observed device, which is what
+#: makes it usable as a probe: the reply can only be an error, so its reason byte
+#: reports whether the *feature* is there and nothing else happens.
+PROBE_OPERATION = 0x7F
+
+
+def request_capability_probe(feature: int) -> Frame:
+    """Ask whether a device has ``feature``, without reading anything from it.
+
+    The reply is always an :attr:`MessageType.ERROR`; decode its payload with
+    :func:`ohr.frame.decode_error_reason`. Reason 1 — *operation not supported* — means
+    the feature is there. Reason 0 means it is not.
+
+    This exists because the answer does not depend on the feature map, so it can check
+    the map rather than trusting it. Both observed devices agreed exactly, which is the
+    result that makes the map worth trusting in the first place.
+
+    **The operation is chosen, not defined.** It was confirmed unused on every feature
+    either device implements, and a firmware that gave it a meaning would turn this
+    from a question into a command. Re-confirm before relying on it against hardware
+    this was not checked on, and prefer the feature map for ordinary use.
+
+    Feature numbers above :data:`HIGHEST_ANSWERING_FEATURE` do not answer at all, so a
+    sweep over the whole seven-bit range spends most of its time waiting for timeouts
+    that mean nothing.
+    """
+    if not 0 <= feature <= 0x7F:
+        raise InvalidValue(f"feature out of range: {feature}")
+    return Frame(VENDOR_SENNHEISER, feature, MessageType.COMMAND, PROBE_OPERATION)

@@ -66,6 +66,26 @@ non-zero test would issue spurious continuation requests.
 Observed feature maps for both devices are in
 [`vectors/features.json`](../../vectors/features.json).
 
+**The map is complete, and was checked rather than trusted.** Every feature number from
+0 to 127 was probed independently, using an operation that exists nowhere, so the error
+reason reported only whether the feature was there — see
+[framing](framing.md#the-reason-byte). On both models the set that answered was exactly
+the set advertised: nothing undeclared, nothing declared but silent.
+
+That is worth knowing because it makes the map authoritative. A client can read it at
+connect time and stop there, rather than probing around it.
+
+The two models differ by six features, all on the earbuds and none the other way:
+
+| Feature | | Earbuds | Over-ear |
+|---|---|:-:|:-:|
+| 11 | `mmi_config` | ● | |
+| 14 | `tws` | ● | |
+| 15 | `fitting_test` | ● | |
+| 16 | `personalized_sound` | ● | |
+| 21 | `auracast` | ● | |
+| 22 | `find_device` | ● | |
+
 ## Feature 3 — power
 
 ### `0x0603` — battery level

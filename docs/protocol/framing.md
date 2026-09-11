@@ -95,6 +95,25 @@ map without being read from it.
 
 Unrecognised values are kept raw: the set of reasons is not known to be closed.
 
+### Silence is not the same as "not supported"
+
+Sweeping all 128 feature numbers on both models, with an operation established as
+unused everywhere, splits them cleanly in two:
+
+| Feature | Behaviour |
+|---|---|
+| 0–31 | answers, with reason 0 or 1 |
+| 32–127 | **no reply at all** |
+
+So the feature field is seven bits wide but only the low five are live on these
+devices. Beyond 31 nothing comes back — not an error, nothing — and a client waits out
+its whole timeout for each one.
+
+Which is the practical point: **a timeout is not evidence that something is
+unsupported.** A device that lacks a feature says so, in about a millisecond. One that
+says nothing is either out of range, wedged, or busy — and at least one model here is
+known to ignore a first request and answer a retry.
+
 ## Writes
 
 No setter in this protocol returns meaningful state. Setters reply with an

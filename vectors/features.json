@@ -9,16 +9,56 @@
       "decoded": {
         "more": false,
         "features": [
-          { "id": 9, "name": "versions", "version": 1 },
-          { "id": 8, "name": "user_eq", "version": 6 },
-          { "id": 12, "name": "transparent_hearing", "version": 1 },
-          { "id": 3, "name": "power", "version": 2 },
-          { "id": 4, "name": "generic_audio", "version": 2 },
-          { "id": 2, "name": "device", "version": 1 },
-          { "id": 10, "name": "device_management", "version": 2 },
-          { "id": 20, "name": "local_name", "version": 1 },
-          { "id": 13, "name": "anc", "version": 1 },
-          { "id": 0, "name": "core", "version": 4 }
+          {
+            "id": 9,
+            "name": "versions",
+            "version": 1
+          },
+          {
+            "id": 8,
+            "name": "user_eq",
+            "version": 6
+          },
+          {
+            "id": 12,
+            "name": "transparent_hearing",
+            "version": 1
+          },
+          {
+            "id": 3,
+            "name": "power",
+            "version": 2
+          },
+          {
+            "id": 4,
+            "name": "generic_audio",
+            "version": 2
+          },
+          {
+            "id": 2,
+            "name": "device",
+            "version": 1
+          },
+          {
+            "id": 10,
+            "name": "device_management",
+            "version": 2
+          },
+          {
+            "id": 20,
+            "name": "local_name",
+            "version": 1
+          },
+          {
+            "id": 13,
+            "name": "anc",
+            "version": 1
+          },
+          {
+            "id": 0,
+            "name": "core",
+            "version": 4
+          }
         ]
       },
       "provenance": {
@@ -36,22 +76,86 @@
       "decoded": {
         "more": false,
         "features": [
-          { "id": 9, "name": "versions", "version": 1 },
-          { "id": 8, "name": "user_eq", "version": 4 },
-          { "id": 14, "name": "tws", "version": 1 },
-          { "id": 12, "name": "transparent_hearing", "version": 1 },
-          { "id": 3, "name": "power", "version": 2 },
-          { "id": 16, "name": "personalized_sound", "version": 2 },
-          { "id": 4, "name": "generic_audio", "version": 4 },
-          { "id": 15, "name": "fitting_test", "version": 1 },
-          { "id": 22, "name": "find_device", "version": 1 },
-          { "id": 2, "name": "device", "version": 1 },
-          { "id": 10, "name": "device_management", "version": 3 },
-          { "id": 20, "name": "local_name", "version": 1 },
-          { "id": 11, "name": "mmi_config", "version": 2 },
-          { "id": 21, "name": "auracast", "version": 1 },
-          { "id": 13, "name": "anc", "version": 1 },
-          { "id": 0, "name": "core", "version": 5 }
+          {
+            "id": 9,
+            "name": "versions",
+            "version": 1
+          },
+          {
+            "id": 8,
+            "name": "user_eq",
+            "version": 4
+          },
+          {
+            "id": 14,
+            "name": "tws",
+            "version": 1
+          },
+          {
+            "id": 12,
+            "name": "transparent_hearing",
+            "version": 1
+          },
+          {
+            "id": 3,
+            "name": "power",
+            "version": 2
+          },
+          {
+            "id": 16,
+            "name": "personalized_sound",
+            "version": 2
+          },
+          {
+            "id": 4,
+            "name": "generic_audio",
+            "version": 4
+          },
+          {
+            "id": 15,
+            "name": "fitting_test",
+            "version": 1
+          },
+          {
+            "id": 22,
+            "name": "find_device",
+            "version": 1
+          },
+          {
+            "id": 2,
+            "name": "device",
+            "version": 1
+          },
+          {
+            "id": 10,
+            "name": "device_management",
+            "version": 3
+          },
+          {
+            "id": 20,
+            "name": "local_name",
+            "version": 1
+          },
+          {
+            "id": 11,
+            "name": "mmi_config",
+            "version": 2
+          },
+          {
+            "id": 21,
+            "name": "auracast",
+            "version": 1
+          },
+          {
+            "id": 13,
+            "name": "anc",
+            "version": 1
+          },
+          {
+            "id": 0,
+            "name": "core",
+            "version": 5
+          }
         ]
       },
       "provenance": {
@@ -66,7 +170,10 @@
       "kind": "payload",
       "command": "feature_list",
       "payload": "",
-      "decoded": { "more": false, "features": [] },
+      "decoded": {
+        "more": false,
+        "features": []
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "An empty payload is valid and means no continuation and no features — not an error, and not an absent reply."
@@ -80,9 +187,21 @@
       "decoded": {
         "more": true,
         "features": [
-          { "id": 0, "name": "core", "version": 4 },
-          { "id": 3, "name": "power", "version": 2 },
-          { "id": 10, "name": "device_management", "version": 2 }
+          {
+            "id": 0,
+            "name": "core",
+            "version": 4
+          },
+          {
+            "id": 3,
+            "name": "power",
+            "version": 2
+          },
+          {
+            "id": 10,
+            "name": "device_management",
+            "version": 2
+          }
         ]
       },
       "provenance": {
@@ -98,9 +217,21 @@
       "decoded": {
         "more": false,
         "features": [
-          { "id": 0, "name": "core", "version": 4 },
-          { "id": 3, "name": "power", "version": 2 },
-          { "id": 10, "name": "device_management", "version": 2 }
+          {
+            "id": 0,
+            "name": "core",
+            "version": 4
+          },
+          {
+            "id": 3,
+            "name": "power",
+            "version": 2
+          },
+          {
+            "id": 10,
+            "name": "device_management",
+            "version": 2
+          }
         ]
       },
       "provenance": {
@@ -116,8 +247,16 @@
       "decoded": {
         "more": false,
         "features": [
-          { "id": 0, "name": "core", "version": 4 },
-          { "id": 3, "name": "power", "version": 2 }
+          {
+            "id": 0,
+            "name": "core",
+            "version": 4
+          },
+          {
+            "id": 3,
+            "name": "power",
+            "version": 2
+          }
         ]
       },
       "provenance": {
@@ -133,13 +272,37 @@
       "decoded": {
         "more": false,
         "features": [
-          { "id": 0, "name": "core", "version": 4 },
-          { "id": 240, "name": null, "version": 3 }
+          {
+            "id": 0,
+            "name": "core",
+            "version": 4
+          },
+          {
+            "id": 240,
+            "name": null,
+            "version": 3
+          }
         ]
       },
       "provenance": {
         "kind": "constructed",
         "rationale": "An unrecognised feature id must be kept with its version and a null name, not dropped. Future firmware will add ids this table does not know, and discarding them would silently understate what a device supports."
+      }
+    },
+    {
+      "id": "capability-probe-frame",
+      "kind": "frame",
+      "bytes": "ff03000004951c7f",
+      "vendor": 1173,
+      "feature": 14,
+      "type": "command",
+      "operation": 127,
+      "payload": "",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Asks whether the device has feature 14 without reading anything. Operation 127 was confirmed unused on every feature either model implements, so the reply can only be an error and its reason byte reports feature presence alone."
       }
     }
   ]
