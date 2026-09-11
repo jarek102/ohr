@@ -236,7 +236,7 @@
         "kind": "observed",
         "device": "accentum-wireless",
         "date": "2026-09-10",
-        "note": "Confirmed on both models. On the earbuds it holds only with both out of the charging case: in the case, or with one bud still in it, the flag reads back as set and then reverts within about a tenth of a second. See docs/protocol/commands.md."
+        "note": "Confirmed on both models. On the earbuds it holds only with both out of the charging case: in the case, or with one bud still in it, the flag reads back as set and then reverts within about a tenth of a second. Passthrough was once reported in one earbud only and did not reproduce; an earbud that had not joined the pair would explain it and would not be visible in any read specified here. See docs/protocol/commands.md."
       }
     },
     {

@@ -88,6 +88,14 @@ and is pinned by a vector.
 *Unavailable* means the device declined to report that field. It does not mean empty,
 and it does not reliably mean "in the case".
 
+**A reported level is not evidence that an earbud is participating.** Both earbuds read
+80% while both sat in the charging case, and again once both were out — the field does
+not distinguish *present* from *joined*. Nothing in this specification does. So a status
+display showing a per-earbud level is not entitled to imply that earbud is in use, and
+an earbud that failed to join the pair would be shown at full confidence. Feature 14
+(`tws`) is advertised by the earbuds and is the obvious place to look; it is not
+specified here.
+
 **There is no defined aggregate.** No rule for combining the three fields into a single
 percentage has been established by observation, so any such number would be invented.
 Present the fields.
