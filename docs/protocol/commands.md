@@ -233,6 +233,13 @@ So `0x1803` is the one that means the same thing every time it is called. A read
 them across a flag change compares two different quantities, and restoring one that way
 writes it into the wrong slot.
 
+> **This reading is disputed.** An independent implementation treats `0x1a02`/`0x1a03`
+> as a single blended axis from full ANC at 0 to full transparency at 100, with the
+> transparency flag merely a view of that axis. That model fits every observation above
+> at least as economically as this one, and one listening test resists it. It is not
+> settled — see [prior art](prior-art.md), which sets out the experiment that would
+> settle it.
+
 **Not a proxy for whether noise control is active** either: the earbuds reported 0.0
 while ANC read as enabled, which is simply their ANC level.
 

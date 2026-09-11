@@ -8,6 +8,7 @@ headsets. Independently documented from observed device behaviour.
 | [framing.md](framing.md) | Frame layout, the command word, stream reassembly, reply correlation |
 | [commands.md](commands.md) | Commands confirmed against hardware |
 | [provenance.md](provenance.md) | What may be recorded here, and how to tell how solid a claim is |
+| [prior-art.md](prior-art.md) | Other implementations: what they corroborate, and where one disputes this |
 
 Start with [framing.md](framing.md) — the framing is shared by every command, and two
 of its properties (the length field excludes four header bytes; a read is not a frame)
