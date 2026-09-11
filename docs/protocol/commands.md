@@ -199,7 +199,9 @@ writes it into the wrong slot.
 **Not a proxy for whether noise control is active** either: the earbuds reported 0.0
 while ANC read as enabled, which is simply their ANC level.
 
-`0x1801` also answers, with a single byte, on both models. What it means has not been
+`0x1801` also answers, with a single byte, on both models. It is **not** a second copy
+of the transparency flag: on the earbuds it read 0 with transparency off and 0 again
+with transparency on, while the over-ear model reads 1. What it does mean has not been
 established, so it is not specified here.
 
 ## Features 4 and 8 — equaliser
@@ -347,6 +349,12 @@ the effect was reported audible in the right earbud only. So an inactive earbud 
 explain it. The protocol carries a single transparency flag for the pair, and there is
 no per-earbud read here to compare it against — whether that is a gap in what this
 specification covers or a fault in the device is unresolved.
+
+Selecting the same mode from the earbuds' own controls produced an **identical**
+reading — all five of `0x1a05`, `0x1805`, `0x1801`, `0x1a03` and `0x1803` matched what
+the writes here produced. Whatever distinguishes the two, it is not visible in any state
+this specification covers. That change was also seen by an ordinary read with no
+subscription, so a client that polls will notice another controller's work.
 
 ### `0x1a04` — set ANC · `0x1804` — set transparency
 
