@@ -332,6 +332,21 @@ be verified by a read.**
 An error reply is also an answer, and it means the setting is now *unknown* rather than
 unchanged — so read it back after one of those too.
 
+### Writes are audible
+
+Both models signal an ANC or transparency change with a **tone in the wearer's ears**.
+A write is not the private, idempotent thing a read is: repeating one has a cost, and
+the person paying it is wearing the device.
+
+This is a design constraint, not a curiosity. Never write a flag that already holds the
+value being asked for; build every sequence from a fresh read and send only what
+differs. An empty sequence — *already there* — is a correct answer, and a client that
+treats it as a failure and writes anyway will beep at someone for nothing.
+
+One beep is unavoidable. Restoring both flags on means an ANC-on write, which clears
+transparency, which must then be written again. The write that silences the flag is the
+one that was asked for.
+
 ### A read-back is necessary, and not sufficient
 
 The earbuds accepted `0x1804 01`, returned success, answered the transparency read with
@@ -366,9 +381,16 @@ across repeated polling. No subscription is involved, so a client that polls see
 another controller's work — and these reads are a trustworthy account of what the
 device is doing, whoever asked for it.
 
-The asymmetry to note is in the *audio*, not the state: ANC engaged this way was
-reported audible in both earbuds, while transparency was reported in one. Both read
-identically on the wire.
+One earlier report of passthrough reaching a single earbud **did not reproduce**:
+transparency alone, and transparency with ANC also on, were both reported even across
+the pair afterwards. It is recorded here only as something seen once and not seen
+again.
+
+What did hold up is what happens when both flags are set: the device sounds like
+**transparency**, throughout. ANC being on underneath it makes no audible difference.
+So although the two flags are independent on the wire, the audio is not a blend, and a
+client presenting the three modes as exclusive is describing what a wearer actually
+hears.
 
 ### `0x1a04` — set ANC · `0x1804` — set transparency
 

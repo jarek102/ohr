@@ -281,6 +281,12 @@ def _cmd_anc(args: argparse.Namespace) -> int:
                     print(f"  {'verify by':22} {step.read.to_bytes().hex()}")
                 return 0
 
+            if not plan:
+                # Not a failure to build one: the device is already there, and writing
+                # a flag that is already set would beep at whoever is wearing it.
+                print("\nalready in that state — nothing to write")
+                return 0
+
             print(f"\napplying ({len(plan)} write(s), each verified by read-back):")
             result = control.apply(session, plan, timeout=args.timeout)
             for outcome in result.outcomes:

@@ -591,6 +591,44 @@
         "date": "2026-09-10",
         "note": "Transparency already reads as wanted and is written anyway, because the ANC-on write ahead of it clears the flag. Sending only the ANC write was tried first: it verified, and left transparency off."
       }
+    },
+    {
+      "id": "mode-anc-from-both-on-does-not-rewrite-anc",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "anc",
+        "anc": true,
+        "transparency": true
+      },
+      "writes": [
+        "ff0300010495180400"
+      ],
+      "verify": [
+        "ff03000004951805"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-10",
+        "note": "Clearing transparency is the whole change; ANC is already on. Writing it again would be audible — both models signal an ANC or transparency change with a tone in the wearer's ears — so a redundant write here is a defect the wearer hears, not a harmless one."
+      }
+    },
+    {
+      "id": "mode-anc-when-already-in-anc-writes-nothing",
+      "kind": "sequence",
+      "sequence": "anc_mode",
+      "given": {
+        "target": "anc",
+        "anc": true,
+        "transparency": false
+      },
+      "writes": [],
+      "verify": [],
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "An empty plan is the correct answer for a mode already selected, and must be reported as 'already there' rather than as a failure to build one. The alternative is a write that changes nothing and beeps at the wearer for no reason."
+      }
     }
   ]
 }

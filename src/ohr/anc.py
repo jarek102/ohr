@@ -148,6 +148,11 @@ def request_set_enabled(on: bool) -> Frame:
     that already has ANC on still dropped transparency, so the side effect belongs to
     the write and not to any change of value. Turning ANC *off* leaves transparency
     alone; the coupling runs one way only.
+
+    **It is audible.** Both models signal ANC with a confirmation tone, so a redundant
+    write is not free the way a redundant read is — it beeps at someone. Send this only
+    when the flag is actually changing, or when its side effect on transparency is the
+    point.
     """
     return Frame(
         VENDOR_SENNHEISER,
@@ -162,6 +167,9 @@ def request_set_transparency(on: bool) -> Frame:
     """Turn transparency on or off. Payload is one flag byte.
 
     A different feature from ANC, so this neither implies nor cancels the other.
+
+    **It is audible**, as the ANC setter is: both models signal either change with a
+    tone. A write that changes nothing still beeps at whoever is wearing them.
     """
     return Frame(
         VENDOR_SENNHEISER,
@@ -297,12 +305,18 @@ def plan_mode(target: Mode, current: State) -> tuple[Step, ...]:
     The plan depends on ``current``, so it must be built from a fresh read. Feeding it
     a stale state produces a sequence that verifies correctly and still leaves the
     wrong mode selected.
+
+    A write here is **audible** — both models signal ANC and transparency with a tone —
+    so a flag already in the wanted position is left alone rather than written for
+    tidiness. That also makes an empty plan a normal answer, meaning *already there*,
+    rather than a failure to produce one.
     """
     if target is Mode.ANC:
         steps = []
         if current.transparency:
             steps.append(_transparency_step(False))
-        steps.append(_enabled_step(True))
+        if not current.anc:
+            steps.append(_enabled_step(True))
         return tuple(steps)
 
     if target is Mode.TRANSPARENCY:
@@ -331,7 +345,9 @@ def plan_state(target: State, current: State) -> tuple[Step, ...]:
     rewritten in that case rather than skipped.
 
     Skipping it instead produces the worst available outcome: a plan that verifies
-    every write it makes and still leaves the device somewhere else.
+    every write it makes and still leaves the device somewhere else. The rewrite costs
+    a tone in the wearer's ears, and there is no way around it: the write that silenced
+    the flag is the one that was asked for.
 
     Everything that must go off goes off first, matching :func:`plan_mode`, and ANC is
     set before transparency so the coupling runs before the flag it would disturb.
