@@ -69,23 +69,46 @@ Ours needs two flags, two levels and a one-way coupling. Theirs needs one axis a
 enable, with `0x1805` a view of the axis rather than a thing of its own. The second is
 the better story, and being the better story is not evidence.
 
-**One observation resists it.** Driving the level between 10 and 100 on the earbuds,
-with ANC on, produced no audible difference — and under a blend model that is the most
-audible change the device can make. That was the earbuds, not the model these projects
-target.
+### Settled: it does not hold here
 
-### Settling it
+The experiment was to drive the level from each starting position on the over-ear model
+and listen. The deciding case turned out not to be the obvious one:
 
-With ANC on and transparency off, set the level to 0 and listen, then to 100 and listen,
-on the over-ear model.
+> **With transparency on and ANC off, writing *any* level — including 100 — drops the
+> device to off.**
 
-- **Swings between noise cancelling and passthrough** — their model is right, `0x1803`
-  is something else, and the level sections of this specification need rewriting.
-- **No change, or only a change in cancelling strength** — ours holds, and the blend is
-  a MOMENTUM 4 behaviour or an artefact of how their UI was built.
+A command meaning *full transparency* cannot leave you with no transparency. And the
+flag agrees without anyone listening: `0x1805` reads 0 after a level write, whatever
+value was written, so the flag is not a view of an axis sitting at its transparency end.
 
-Until then the specification says what was observed and names the alternative. It does
-not split the difference.
+Every case follows instead from the plainer rule — **the write clears the transparency
+flag and leaves ANC alone**:
+
+| Before | Heard | Under "clears transparency" |
+|---|---|---|
+| ANC on, transparency off | stays ANC, level applies | nothing to clear |
+| both off | nothing | nothing to clear, ANC already off |
+| transparency on, ANC off | drops to off | flag cleared, ANC was off |
+| transparency on, ANC on | drops to ANC | flag cleared, ANC stays |
+
+Two loose ends, neither of which rescues the axis. With ANC on, levels 0 and 100 produce
+a short tone and values between them do not — the endpoints act like a state change.
+And no difference in cancelling was reported between those endpoints, judged in a quiet
+room, which is the weakest observation in this document.
+
+**The blend reading may still be correct for the MOMENTUM 4.** It is a model neither of
+us has. What is settled is that it does not describe these two.
+
+### Worth saying about how it went
+
+That hypothesis was worth the day it cost. It was simpler than ours, it fitted every
+reading we had, and the only way to separate them was to go and ask — which produced a
+better-specified command than the one we started with, including a behaviour table
+nobody would have thought to capture without something to disprove.
+
+It also survives as the explanation for `0x1803` being unaccounted for in their model:
+that read differs between our two devices, 100 against 75, and is unmoved by mode. An
+axis has no room for it.
 
 ## What they have that is not here
 

@@ -149,11 +149,10 @@ def request_set_enabled(on: bool) -> Frame:
     the write and not to any change of value. Turning ANC *off* leaves transparency
     alone; the coupling runs one way only.
 
-    **It is audible, in both directions.** Both models play a tone in the wearer's ears
-    when ANC goes on *and* when it goes off. This is the only setter here known to make
-    a sound, which makes a redundant write to it the opposite of a redundant read: it
-    beeps at someone. Send it only when the flag is actually changing, or when its side
-    effect on transparency is the point.
+    **It is audible, in both directions, on both models** — the one setter here that is.
+    That makes a redundant write the opposite of a redundant read: it beeps at someone.
+    Send it only when the flag is actually changing, or when its side effect on
+    transparency is the point.
     """
     return Frame(
         VENDOR_SENNHEISER,
@@ -169,9 +168,9 @@ def request_set_transparency(on: bool) -> Frame:
 
     A different feature from ANC, so this neither implies nor cancels the other.
 
-    **Silent**, unlike the ANC setter: neither model plays a tone when transparency
-    changes, in either direction. So a redundant write here is merely pointless rather
-    than something the wearer hears.
+    Audibility differs by model: silent on the earbuds, while the over-ear model plays
+    a tone — and a *different* one from the ANC tone, so that device distinguishes the
+    two modes by ear. Treat a redundant write as something the wearer may hear.
     """
     return Frame(
         VENDOR_SENNHEISER,
@@ -185,16 +184,19 @@ def request_set_transparency(on: bool) -> Frame:
 def request_set_level(level: float) -> Frame:
     """Set the level, as a fraction of full scale. Payload is one percentage byte.
 
-    **This also clears the transparency flag.** Writing the level a device already
-    reported still moved it out of transparency, so the side effect belongs to the
-    write rather than to any change of value: this is the ANC level, and setting it
-    means selecting ANC. A caller must re-read the flags afterwards, not just the
-    level.
+    **This clears the transparency flag and leaves ANC alone.** Writing the level a
+    device already reported still clears it, so the side effect belongs to the write
+    rather than to any change of value. A caller must re-read the flags afterwards, not
+    just the level.
 
-    **Silent**, despite engaging ANC — unlike the ANC flag and submode writes, which
-    both announce themselves. Nor was any audible difference reported between a level
-    of 10 and a level of 100 on the over-ear model, so what this changes is not obvious
-    from listening.
+    The consequence depends on where the device started: from transparency with ANC off
+    it lands on off, and from both-on it lands on ANC. Neither is what someone adjusting
+    a level expects, which is why this is a mode change wearing a parameter's clothes.
+
+    Audibility differs by model: silent on the earbuds, while the over-ear model plays
+    a tone for 0 and 100 but not for values between them. No difference in the sound of
+    the cancelling was reported between those endpoints, so what this changes is not
+    obvious by ear.
 
     Rejects anything outside 0.0–1.0 rather than clamping: a caller asking for 1.5 has
     a bug, and silently writing full scale would hide it.
@@ -213,8 +215,8 @@ def request_set_level(level: float) -> Frame:
 def request_set_submode(identifier: int, state: int) -> Frame:
     """Set one submode. Payload is ``(identifier, state)``.
 
-    **Audible**, like the ANC flag and unlike the level: every submode change plays a
-    tone. So this is a write to send only when something is actually changing.
+    **Audible on the earbuds**, where every submode change plays a tone; not reported on
+    the over-ear model. Send it only when something is actually changing.
 
     The accepted range of ``state`` differs per submode and is not advertised by any
     read, so it is not validated here beyond fitting in a byte. Verify by read-back —
@@ -319,8 +321,8 @@ def plan_mode(target: Mode, current: State) -> tuple[Step, ...]:
 
     **The ANC write is audible**, on both models and in both directions, so a flag
     already in the wanted position is left alone rather than written for tidiness — a
-    redundant enable is a beep in someone's ears. Transparency is silent, but it is
-    skipped on the same terms; there is no reason to send either.
+    redundant enable is a beep in someone's ears. The transparency write is audible on
+    one model too, and is skipped on the same terms; there is no reason to send either.
 
     That makes an empty plan a normal answer, meaning *already there*, rather than a
     failure to produce one.
@@ -359,9 +361,9 @@ def plan_state(target: State, current: State) -> tuple[Step, ...]:
     rewritten in that case rather than skipped.
 
     Skipping it instead produces the worst available outcome: a plan that verifies
-    every write it makes and still leaves the device somewhere else. The rewrite itself
-    is free — transparency is silent — though the ANC write that made it necessary is
-    not.
+    every write it makes and still leaves the device somewhere else. On the over-ear
+    model that rewrite is a second audible tone, which is a real cost and still the
+    lesser one: the alternative is leaving the device in a state nobody asked for.
 
     Everything that must go off goes off first, matching :func:`plan_mode`, and ANC is
     set before transparency so the coupling runs before the flag it would disturb.

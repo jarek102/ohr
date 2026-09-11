@@ -233,12 +233,10 @@ So `0x1803` is the one that means the same thing every time it is called. A read
 them across a flag change compares two different quantities, and restoring one that way
 writes it into the wrong slot.
 
-> **This reading is disputed.** An independent implementation treats `0x1a02`/`0x1a03`
-> as a single blended axis from full ANC at 0 to full transparency at 100, with the
-> transparency flag merely a view of that axis. That model fits every observation above
-> at least as economically as this one, and one listening test resists it. It is not
-> settled — see [prior art](prior-art.md), which sets out the experiment that would
-> settle it.
+An independent implementation reads this command differently — as a single blended axis
+from full ANC at 0 to full transparency at 100. **That reading does not hold on these
+devices**; see [prior art](prior-art.md) for what refutes it and why it was worth taking
+seriously anyway.
 
 **Not a proxy for whether noise control is active** either: the earbuds reported 0.0
 while ANC read as enabled, which is simply their ANC level.
@@ -386,20 +384,20 @@ unchanged — so read it back after one of those too.
 
 ### Some writes are audible
 
-Half of these announce themselves with a **tone in the wearer's ears**:
+Most of these announce themselves with a **tone in the wearer's ears**, and **the two
+models do not agree about which**:
 
-| Write | Sound |
-|---|---|
-| `0x1a04` set ANC, either direction | tone |
-| `0x1a00` set submode, any submode, either direction | tone |
-| `0x1a02` set level | silent |
-| `0x1804` set transparency, either direction | silent |
+| Write | Over-ear | Earbuds |
+|---|---|---|
+| `0x1a04` set ANC, either direction | tone | tone |
+| `0x1a00` set submode, any, either direction | — | tone |
+| `0x1804` set transparency, either direction | tone, and a *different* one from ANC | silent |
+| `0x1a02` set level | tone at 0 and 100 only | silent |
 
-The pattern is that the device announces a **discrete change to what ANC is doing** —
-on, off, or which submode — and says nothing about a continuous parameter or about
-transparency. `0x1a02` is silent despite engaging ANC, which is the one result that
-does not follow from the rule; and no audible difference was reported between a level
-of 10 and a level of 100, so what that command changes is not obvious by ear either.
+So a device announces roughly what it considers a change of mode, and the boundary of
+"roughly" moves by model. Do not generalise from one headset to another: the over-ear
+model distinguishes ANC from transparency by ear, and the earbuds say nothing about
+transparency at all.
 
 This matters because an audible write is not the private, idempotent thing a read is.
 Repeating one has a cost, and the person paying it is wearing the device. So: never
@@ -511,13 +509,32 @@ Availability is a per-product decision that no read exposes — a device need no
 One byte, in hundredths, matching the read encoding: 0.5 is 50. Confirmed on the
 over-ear model at 0, 40, 50 and 100.
 
-Confirmed at 10, 50, 90 and 100 on both models.
+Confirmed at 0, 10, 50, 90 and 100 on both models.
 
-**This write also clears the transparency flag**, the same way `0x1a04 01` does, and
-for what looks like the same reason: it engages ANC. Writing the level the device
-already reported still moved it out of transparency, so the side effect follows the
-write itself, not a change of value. It is nonetheless **silent**, which is the one
-place the audibility rule does not follow from the coupling.
+**This write clears the transparency flag and leaves ANC alone.** That single rule
+accounts for everything the over-ear model was heard to do, across every starting
+position:
+
+| Before the write | What is heard |
+|---|---|
+| ANC on, transparency off | stays in ANC; the level applies |
+| both off | nothing at all |
+| transparency on, ANC off | drops to off |
+| transparency on, ANC on | drops to ANC |
+
+The last two are the interesting ones, and they are why the blended-axis reading fails:
+**writing 100 while in transparency leaves you with no transparency.** A command that
+meant *full transparency* could not do that. The flag read agrees — `0x1805` reads 0
+after a level write, whatever value was written.
+
+Writing the level the device already reported still clears the flag, so the side effect
+follows the write rather than any change of value.
+
+One detail is unexplained. With ANC on, writing **0 or 100 produces a short tone while
+values in between are silent** — as though the endpoints are a state change and the
+middle is a parameter. No matching difference in the sound of the cancelling was
+reported between those endpoints, though that was judged in a quiet room and is the
+weakest observation here.
 
 Taken with the two stored levels described under `0x1a03`, this is *set the ANC level* —
 which necessarily means selecting ANC. It does not touch the transparency level, which
