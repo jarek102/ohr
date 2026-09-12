@@ -711,6 +711,38 @@
         "date": "2026-09-10",
         "note": "Anti-wind is identifier 1. Sent, acknowledged, and confirmed by reading the submode list back — it had been 1 and read 0 afterwards."
       }
+    },
+    {
+      "id": "auto-pause-stops-music",
+      "kind": "payload",
+      "command": "auto_pause",
+      "payload": "01",
+      "decoded": {
+        "value": 1,
+        "name": "stop_while_active"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Feature 12 operation 1 — the same operation number that carries submodes on feature 13, and a different thing entirely. This byte was previously recorded as answering on both models with no meaning established."
+      }
+    },
+    {
+      "id": "auto-pause-keeps-playing",
+      "kind": "payload",
+      "command": "auto_pause",
+      "payload": "00",
+      "decoded": {
+        "value": 0,
+        "name": "keep_playing"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "Read 0 with transparency both off and on, so it is a setting rather than a state. The two models being configured oppositely is what makes the pair readable rather than a guess."
+      }
     }
   ]
 }

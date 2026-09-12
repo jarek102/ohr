@@ -6,7 +6,10 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "46",
-      "decoded": { "shape": "scalar", "level": 0.7 },
+      "decoded": {
+        "shape": "scalar",
+        "level": 0.7
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -18,7 +21,10 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "5a",
-      "decoded": { "shape": "scalar", "level": 0.9 },
+      "decoded": {
+        "shape": "scalar",
+        "level": 0.9
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -30,7 +36,12 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "50ff32",
-      "decoded": { "shape": "triplet", "left": 0.8, "right": null, "case": 0.5 },
+      "decoded": {
+        "shape": "triplet",
+        "left": 0.8,
+        "right": null,
+        "case": 0.5
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -43,7 +54,12 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "50503c",
-      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.8, "case": 0.6 },
+      "decoded": {
+        "shape": "triplet",
+        "left": 0.8,
+        "right": 0.8,
+        "case": 0.6
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -55,7 +71,12 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "50323c",
-      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.5, "case": 0.6 },
+      "decoded": {
+        "shape": "triplet",
+        "left": 0.8,
+        "right": 0.5,
+        "case": 0.6
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -68,7 +89,12 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "503232",
-      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.5, "case": 0.5 },
+      "decoded": {
+        "shape": "triplet",
+        "left": 0.8,
+        "right": 0.5,
+        "case": 0.5
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -80,7 +106,10 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "ff",
-      "decoded": { "shape": "scalar", "level": 2.55 },
+      "decoded": {
+        "shape": "scalar",
+        "level": 2.55
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "The single-byte shape has no 0xff special case, unlike the triplet. 0xff decodes as 255/100. This asymmetry is the most likely source of a wrong reading, so it is pinned rather than left implicit. A decoder that returns null here is wrong; one that clamps to 1.0 is also wrong."
@@ -91,7 +120,12 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "ffffff",
-      "decoded": { "shape": "triplet", "left": null, "right": null, "case": null },
+      "decoded": {
+        "shape": "triplet",
+        "left": null,
+        "right": null,
+        "case": null
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Every field may be unavailable at once."
@@ -102,7 +136,12 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "50503c00",
-      "decoded": { "shape": "triplet", "left": 0.8, "right": 0.8, "case": 0.6 },
+      "decoded": {
+        "shape": "triplet",
+        "left": 0.8,
+        "right": 0.8,
+        "case": 0.6
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Bytes beyond the third are not consumed. A field ignored here is not proven to be padding — do not assign it a meaning."
@@ -113,7 +152,10 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "00",
-      "decoded": { "shape": "scalar", "level": 0.0 },
+      "decoded": {
+        "shape": "scalar",
+        "level": 0.0
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Lower bound. Distinct from unavailable."
@@ -124,7 +166,10 @@
       "kind": "payload",
       "command": "battery_level",
       "payload": "64",
-      "decoded": { "shape": "scalar", "level": 1.0 },
+      "decoded": {
+        "shape": "scalar",
+        "level": 1.0
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "0x64 = 100 = full. No clamp is applied above this."
@@ -157,7 +202,10 @@
       "kind": "payload",
       "command": "battery_types",
       "payload": "01ff",
-      "decoded": { "first": "vdl", "second": "invalid" },
+      "decoded": {
+        "first": "vdl",
+        "second": "invalid"
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -170,7 +218,10 @@
       "kind": "payload",
       "command": "battery_types",
       "payload": "05ff",
-      "decoded": { "first": "mbt", "second": "invalid" },
+      "decoded": {
+        "first": "mbt",
+        "second": "invalid"
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -193,7 +244,10 @@
       "kind": "payload",
       "command": "battery_charger",
       "payload": "0000",
-      "decoded": { "first": "disconnected", "second": "disconnected" },
+      "decoded": {
+        "first": "disconnected",
+        "second": "disconnected"
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -206,7 +260,10 @@
       "kind": "payload",
       "command": "battery_charger",
       "payload": "0101",
-      "decoded": { "first": "charging", "second": "charging" },
+      "decoded": {
+        "first": "charging",
+        "second": "charging"
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -218,7 +275,10 @@
       "kind": "payload",
       "command": "battery_charger",
       "payload": "02",
-      "decoded": { "first": "complete", "second": null },
+      "decoded": {
+        "first": "complete",
+        "second": null
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "One byte is a valid reply. The absent second value stays null rather than defaulting to disconnected: absence and disconnected are different facts."
@@ -229,7 +289,10 @@
       "kind": "payload",
       "command": "battery_charger",
       "payload": "07",
-      "decoded": { "first": null, "second": null },
+      "decoded": {
+        "first": null,
+        "second": null
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "An unrecognised state keeps a null name rather than raising, so a firmware addition does not break a status read."
@@ -244,6 +307,61 @@
       "provenance": {
         "kind": "constructed",
         "rationale": "At least one value is required."
+      }
+    },
+    {
+      "id": "eco-mode-off",
+      "kind": "payload",
+      "command": "eco_mode",
+      "payload": "00",
+      "decoded": {
+        "enabled": false
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12"
+      }
+    },
+    {
+      "id": "battery-protection-off",
+      "kind": "payload",
+      "command": "battery_protection",
+      "payload": "00",
+      "decoded": {
+        "enabled": false
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Feature 3 is power, not just battery. A device with this on charges slowly and stops short of full, so it will never report 100% — worth knowing before reading a plateau as a fault."
+      }
+    },
+    {
+      "id": "battery-protection-invalid",
+      "kind": "payload",
+      "command": "battery_protection",
+      "payload": "02",
+      "error": "invalid_value",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "A two-valued setting. Accepting a third value matters more than usual here, because a neighbouring feature uses the opposite polarity and a truthiness test would already be wrong."
+      }
+    },
+    {
+      "id": "battery-protection-on",
+      "kind": "payload",
+      "command": "battery_protection",
+      "payload": "01",
+      "decoded": {
+        "enabled": true
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "The vendor application showed battery protection enabled on this device and absent on the other, which read 0. The pair is what confirms the polarity rather than assuming it."
       }
     }
   ]

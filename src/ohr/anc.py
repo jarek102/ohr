@@ -27,6 +27,7 @@ FEATURE_ANC = 13
 
 OP_SET_SUBMODE = 0
 OP_SUBMODES = 1
+OP_AUTO_PAUSE = 1
 OP_SET_LEVEL = 2
 OP_LEVEL = 3
 OP_SET_ENABLED = 4
@@ -70,6 +71,35 @@ def request_transparency() -> Frame:
     return Frame(
         VENDOR_SENNHEISER, FEATURE_TRANSPARENT_HEARING, MessageType.COMMAND, OP_ENABLED
     )
+
+
+#: What transparency does to whatever is playing.
+AUTO_PAUSE: dict[int, str] = {0: "keep_playing", 1: "stop_while_active"}
+
+
+def request_auto_pause() -> Frame:
+    """Whether transparency pauses the music while it is active. Empty payload.
+
+    Operation 1 on feature 12 — the same number that carries *submodes* on feature 13,
+    and an entirely different thing. The two noise-control features mirror each other
+    at operations 0 to 5 but do not mean the same by them.
+    """
+    return Frame(
+        VENDOR_SENNHEISER, FEATURE_TRANSPARENT_HEARING, MessageType.COMMAND, OP_AUTO_PAUSE
+    )
+
+
+def decode_auto_pause(payload: bytes) -> tuple[int, str | None]:
+    """Decode the auto-pause setting as ``(value, name)``.
+
+    0 keeps playing, 1 stops the music while transparency is on. The two observed models
+    are configured oppositely, which is what makes the pair readable rather than a guess.
+    """
+    if not payload:
+        raise InvalidLength("auto-pause payload is empty")
+    if payload[0] not in AUTO_PAUSE:
+        raise InvalidValue(f"auto-pause value {payload[0]} is not a known setting")
+    return payload[0], AUTO_PAUSE[payload[0]]
 
 
 def request_submodes() -> Frame:

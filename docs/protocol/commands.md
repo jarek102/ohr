@@ -30,6 +30,12 @@ not evidence that anything changed.
 | `0x1a03` | Active level | empty |
 | `0x1a05` | ANC enabled | empty |
 | `0x0401` | On-head detection setting | empty |
+| `0x0406` | aptX 96 kHz enabled | empty |
+| `0x0408` | aptX Lossless enabled — earbuds only | empty |
+| `0x0609` | Eco mode | empty |
+| `0x060b` | Battery protection | empty |
+| `0x1801` | Transparency auto-pause | empty |
+| `0x2802` | Device name | empty |
 | `0x0800` | Negotiated codec | empty |
 | `0x0802` | Tone and voice prompts | empty |
 | `0x0807` | Prompt language | empty |
@@ -80,8 +86,11 @@ reason reported only whether the feature was there — see
 [framing](framing.md#the-reason-byte). On both models the set that answered was exactly
 the set advertised: nothing undeclared, nothing declared but silent.
 
-That is worth knowing because it makes the map authoritative. A client can read it at
-connect time and stop there, rather than probing around it.
+That is worth knowing because it makes the map authoritative **about features**. It
+says nothing about the operations inside one: both models advertise feature 2, and only
+the earbuds answer its lossless-aptX read — the other replies *operation not supported*.
+So capability is per command, and the map is the right place to start rather than the
+last word.
 
 The two models differ by six features, all on the earbuds and none the other way:
 
@@ -150,6 +159,15 @@ the way to tell whether the earbuds are in their case, which matters — see
 
 There is **no case field**, even on a model whose battery reading includes the case. A
 case percentage therefore says nothing about whether the case is charging.
+
+### `0x0609` — eco mode · `0x060b` — battery protection
+
+Empty payload, one byte each: 0 off, 1 on. Feature 3 is **power**, not only battery.
+
+Battery protection was confirmed against the vendor application, which showed it enabled
+on the earbuds — reading 1 — and absent on the over-ear model, reading 0. It charges
+more slowly and stops short of full, so a device with it on **will never report 100%**.
+Worth knowing before reading a plateau as a fault.
 
 ### `0x060e` — battery types
 
@@ -249,10 +267,20 @@ seriously anyway.
 **Not a proxy for whether noise control is active** either: the earbuds reported 0.0
 while ANC read as enabled, which is simply their ANC level.
 
-`0x1801` also answers, with a single byte, on both models. It is **not** a second copy
-of the transparency flag: on the earbuds it read 0 with transparency off and 0 again
-with transparency on, while the over-ear model reads 1. What it does mean has not been
-established, so it is not specified here.
+### `0x1801` — auto-pause
+
+Empty payload. One byte: **0 keeps the music playing** while transparency is active,
+**1 stops it**.
+
+This was previously recorded here as an unexplained byte that answered on both models
+and did not track the transparency flag. It does not track it because it is a setting
+about what transparency *does*, not a copy of whether it is on. The two observed devices
+are configured oppositely — the over-ear model stops the music, the earbuds do not —
+which is what makes the pair readable rather than a guess.
+
+Note the operation number: **1 on feature 12 is auto-pause, while 1 on feature 13 is the
+submode list.** The two noise-control features mirror each other across operations 0 to
+5 and do not mean the same things by them.
 
 ## Features 4 and 8 — equaliser
 
@@ -353,7 +381,18 @@ Empty payload, one byte each.
 and this says whether the device will actually make the sound — it turns "a write may be
 heard" from a caveat into something a client can check. Both observed devices read 2.
 
-## Feature 2 — on-head detection
+## Feature 2 — device settings
+
+### `0x0406` — aptX 96 kHz · `0x0408` — aptX Lossless
+
+Empty payload, one byte each, **normal polarity**: 0 off, 1 on. Both models read 1 for
+96 kHz; only the earbuds implement the lossless read, and answered 0.
+
+These are two operations away from on-head detection, which is inverted — so this
+feature carries **no single convention**. Decode each command against its own meaning.
+
+They also bear on the codec: they are switches for the two highest-bandwidth modes, so
+they are worth capturing either side of any experiment about audio quality.
 
 ### `0x0401` — is on-head detection enabled
 
@@ -400,6 +439,18 @@ written from scratch.
 
 NUL-terminated text: `ACAEBT Black`, `MTW4 Graphite`. Model and finish — a property of
 the product, not of its owner.
+
+### `0x2802` — device name
+
+NUL-terminated text, on feature 20. Both devices still carry their factory names.
+
+**Operation 2, not 0.** Operation 0 on that feature answers with an *empty payload*,
+which is exactly what a setter's acknowledgement looks like — so it is not specified as
+a read here. The same is true of `0x060f` and, on the earbuds, `0x2c00` and `0x2c01`.
+An empty reply is not a safe thing to call a read.
+
+Unlike the product name, this is **whatever the owner called it**. Treat it as their
+data.
 
 ### `0x1205` — charging-case serial
 

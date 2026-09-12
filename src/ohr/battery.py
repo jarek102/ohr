@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from .errors import InvalidLength
+from .errors import InvalidLength, InvalidValue
 from .frame import Frame, MessageType, VENDOR_SENNHEISER
 
 FEATURE_POWER = 3
@@ -147,3 +147,51 @@ def decode_charger(payload: bytes) -> ChargerState:
 def request_charger() -> Frame:
     """Build the charger-state request. Empty payload."""
     return Frame(VENDOR_SENNHEISER, FEATURE_POWER, MessageType.COMMAND, OP_CHARGER_STATE)
+
+
+# --- other feature 3 settings -----------------------------------------------
+#
+# Feature 3 is "power", not "battery": it carries the settings that decide how the
+# device spends its charge as well as how much is left.
+
+OP_ECO_MODE = 9
+OP_BATTERY_PROTECTION = 11
+
+
+def request_eco_mode() -> Frame:
+    """Is eco mode on? Empty payload."""
+    return Frame(VENDOR_SENNHEISER, FEATURE_POWER, MessageType.COMMAND, OP_ECO_MODE)
+
+
+def request_battery_protection() -> Frame:
+    """Is battery protection on? Empty payload.
+
+    The vendor application describes it as charging more slowly and stopping short of
+    full, so a device with this on will never report 100% — worth knowing before
+    treating a plateau below full as a fault.
+    """
+    return Frame(
+        VENDOR_SENNHEISER, FEATURE_POWER, MessageType.COMMAND, OP_BATTERY_PROTECTION
+    )
+
+
+def _setting(payload: bytes, what: str) -> bool:
+    if not payload:
+        raise InvalidLength(f"{what} payload is empty")
+    if payload[0] > 1:
+        raise InvalidValue(f"{what} value {payload[0]} is neither off nor on")
+    return payload[0] == 1
+
+
+def decode_eco_mode(payload: bytes) -> bool:
+    """Decode eco mode. Normal polarity here: 0 is off."""
+    return _setting(payload, "eco mode")
+
+
+def decode_battery_protection(payload: bytes) -> bool:
+    """Decode battery protection. Normal polarity here: 0 is off.
+
+    Worth stating because on-head detection, two features away, is the other way round.
+    Polarity is per command in this protocol, not a convention.
+    """
+    return _setting(payload, "battery protection")

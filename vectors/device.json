@@ -161,6 +161,80 @@
         "kind": "constructed",
         "rationale": "A two-valued field with inverted polarity is the worst place to accept a third value: a truthiness test would already have the sense backwards."
       }
+    },
+    {
+      "id": "aptx-96k-enabled",
+      "kind": "payload",
+      "command": "aptx_96k",
+      "payload": "01",
+      "decoded": {
+        "enabled": true
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Normal polarity, two operations away from on-head detection which is inverted. This feature has no single convention; decode each command against its own meaning."
+      }
+    },
+    {
+      "id": "local-name",
+      "kind": "payload",
+      "command": "local_name",
+      "payload": "414343454e54554d",
+      "decoded": {
+        "name": "ACCENTUM"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "accentum-wireless",
+        "date": "2026-09-12",
+        "note": "Operation 2 on feature 20. Operation 0 answers with an empty payload, which is indistinguishable from a setter acknowledging, so it is not specified as a read. This device still carries its factory name; a renamed one would be the owner's data."
+      }
+    },
+    {
+      "id": "aptx-96k-enabled-earbuds",
+      "kind": "payload",
+      "command": "aptx_96k",
+      "payload": "01",
+      "decoded": {
+        "enabled": true
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12"
+      }
+    },
+    {
+      "id": "aptx-lossless-off",
+      "kind": "payload",
+      "command": "aptx_lossless",
+      "payload": "00",
+      "decoded": {
+        "enabled": false
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "Only the earbuds answer this. The over-ear model advertises the same feature and replies operation-not-supported, so a feature being listed does not promise every operation inside it."
+      }
+    },
+    {
+      "id": "local-name-earbuds",
+      "kind": "payload",
+      "command": "local_name",
+      "payload": "4d4f4d454e54554d2054572034",
+      "decoded": {
+        "name": "MOMENTUM TW 4"
+      },
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-12",
+        "note": "Still the factory name on this device."
+      }
     }
   ]
 }

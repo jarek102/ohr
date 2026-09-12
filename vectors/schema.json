@@ -240,7 +240,13 @@
                   "on_head_detection",
                   "codec",
                   "prompts",
-                  "prompt_language"
+                  "prompt_language",
+                  "aptx_96k",
+                  "local_name",
+                  "eco_mode",
+                  "battery_protection",
+                  "auto_pause",
+                  "aptx_lossless"
                 ]
               },
               "payload": {
