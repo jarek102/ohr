@@ -143,27 +143,40 @@ host offers SBC, SBC-XQ, AAC and aptX, and aptX — the highest priority of the 
 active before, during and after. They were not already sitting in a degraded state with
 no room to drop further.
 
-**What this settles is narrower than "nothing happened".** Describing the two events
-side by side is what makes the difference clear:
+**These runs never reproduced the fault**, which is the first thing to say. The audio
+was fine throughout all of them, so what they measured was a healthy link under load —
+not the thing worth understanding.
 
-| | Original | These runs |
-|---|---|---|
-| Symptom | **choppy, badly degraded** | audio fine throughout |
-| Codec | not measured | unchanged |
+The original event, described properly, is a different animal:
 
-*Choppy* is the word that matters. Stuttering is a **dropout** signature — packets not
-arriving in time — and a codec renegotiation does not sound like that; it sounds like a
-continuous stream that is merely worse. So the hypothesis these runs tested was probably
-the wrong one from the start, and a codec name was the wrong instrument: it cannot see
-dropouts, retransmissions, or a bitrate shift inside an adaptive codec.
+| | |
+|---|---|
+| Symptom | choppy and badly degraded — a **dropout** signature, not a quieter or coarser stream |
+| Duration | **persisted after the traffic stopped**, indefinitely |
+| Cleared by | reconnecting — and, on at least one occasion, by **switching the codec** |
 
-What is now established: **whatever happened, it was not a codec downgrade.** The
-contention idea itself is untested rather than refuted, and the symptom points at the
-radio rather than at negotiation. Treat a burst of requests as costly in time, and
-regard heavy control traffic during playback as unproven rather than safe.
+Persistence is the decisive detail. Congestion ends when the load does; this did not. So
+whatever went wrong was not contention while the burst ran but **a state the link got
+into and stayed in**, and the fix both times was the same thing underneath: tearing down
+the audio stream and setting it up again. Changing the codec does that as a side effect,
+which is why it worked.
 
-Settling it wants packet statistics from the host stack — dropouts, retransmissions,
-buffer underruns — not another protocol read.
+That also explains why a codec read found nothing. The codec never was the variable —
+it stays put across the fault, which is exactly why switching it *deliberately* is an
+effective repair rather than a diagnosis.
+
+**Practical consequence.** If audio degrades during heavy control traffic, it will not
+recover on its own. Re-establish the stream. On a PipeWire host, switching the card to
+another A2DP codec and back is quicker than a full reconnect:
+
+```bash
+pactl set-card-profile bluez_card.AA_BB_CC_DD_EE_FF a2dp-sink-aac && sleep 1 && pactl set-card-profile bluez_card.AA_BB_CC_DD_EE_FF a2dp-sink
+```
+
+**Still unexplained**, and not answerable with this protocol: what stuck, and why. The
+useful experiment is no longer "watch the codec under load" but "reproduce the fault,
+then compare host-side packet statistics against a healthy link" — retransmissions,
+buffer underruns, flush timeouts.
 
 ## Writes
 
