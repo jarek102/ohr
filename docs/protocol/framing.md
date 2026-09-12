@@ -167,11 +167,20 @@ effective repair rather than a diagnosis.
 
 **Practical consequence.** If audio degrades during heavy control traffic, it will not
 recover on its own. Re-establish the stream. On a PipeWire host, switching the card to
-another A2DP codec and back is quicker than a full reconnect:
+another A2DP codec and back does that in a few seconds, without unpairing or power
+cycling anything:
 
 ```bash
-pactl set-card-profile bluez_card.AA_BB_CC_DD_EE_FF a2dp-sink-aac && sleep 1 && pactl set-card-profile bluez_card.AA_BB_CC_DD_EE_FF a2dp-sink
+pactl list short cards | grep bluez
 ```
+
+```bash
+pactl set-card-profile bluez_card.AA_BB_CC_DD_EE_FF a2dp-sink-aac && sleep 2 && pactl set-card-profile bluez_card.AA_BB_CC_DD_EE_FF a2dp-sink
+```
+
+Checked on the earbuds: the profile moved to AAC and back, and the negotiated codec
+returned to aptX. Substitute whichever profiles that card offers — `pactl list cards`
+names them, and they differ per device.
 
 **Still unexplained**, and not answerable with this protocol: what stuck, and why. The
 useful experiment is no longer "watch the codec under load" but "reproduce the fault,
