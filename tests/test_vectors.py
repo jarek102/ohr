@@ -210,6 +210,12 @@ SEQUENCES = {
     ),
     "anc_level": lambda g: _frames(anc.plan_level(g["level"])),
     "anc_submode": lambda g: _frames(anc.plan_submode(g["identifier"], g["state"])),
+    "eq_preset": lambda g: _frames(
+        equaliser.plan_preset(
+            {int(k): v for k, v in g["gains"].items()},
+            equaliser.Configuration(g["bands"], g["gain_min_db"], g["gain_max_db"]),
+        )
+    ),
 }
 
 SEQUENCE_VECTORS = [v for v in ALL if v["kind"] == "sequence"]

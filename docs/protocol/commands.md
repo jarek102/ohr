@@ -48,6 +48,9 @@ Writes:
 
 | Word | Command | Request payload |
 |---|---|---|
+| `0x0803` | Set equaliser mode | mode byte |
+| `0x1001` | Set band gain | band index, signed gain |
+| `0x1008` | Set bass boost | flag byte |
 | `0x1804` | Set transparency | flag byte |
 | `0x1a00` | Set submode | identifier, state |
 | `0x1a02` | Set level | percentage byte |
@@ -334,6 +337,43 @@ Clamp to the range from `0x1000`, not to the range the encoding could carry.
 ### `0x1009` — bass boost
 
 Empty payload. Reply is one byte: 0 off, 1 on.
+
+### `0x1001` — set band gain · `0x1008` — set bass boost · `0x0803` — set mode
+
+`0x1001` takes **the band index then a signed gain byte**, in the same tenths-of-a-decibel
+encoding `0x1002` reads back. Confirmed on the earbuds: band 2 to +3.0 dB landed,
+verified, and the other four bands did not move.
+
+**One byte per value is local to this command.** Other writes on feature 8 encode values
+as unsigned 16-bit, so generalising from here sends half the bytes the device expects.
+
+Clamp to the range `0x1000` reports, not to what a signed byte can hold. Both models
+allow ±6.0 dB while the encoding reaches ±12.7.
+
+`0x1008` is a flag byte, confirmed and restored. **`0x0803` sets the mode and lives on
+feature 4**, not feature 8 — the bands and the chain that uses them are on different
+features, which is the easiest thing to get wrong here. Not yet sent to hardware.
+
+### A preset is N writes
+
+There is no command that sets a curve. Applying one means a write per band, so
+**partial application is a real state**: stop halfway and the device holds half of one
+preset and half of another, a shape no preset describes.
+
+Apply in a fixed order — index order will do — so that a half-applied preset leaves the
+same half every time, and verify each band as you go. Four bands were applied and
+verified this way on the earbuds, then restored.
+
+### The parametric equaliser
+
+Operations 10 to 19 address a parametric equaliser: stage frequencies, Q, filter type,
+gain, and a pre-gain. **Neither model implements it usefully**, but they do not agree
+about how to say so: `0x100b`, `0x100d` and `0x1011` answer **reason 5** on both, while
+`0x1013` answers 132 on the earbuds and returns data on the over-ear model.
+
+That last point is worth stating because it contradicts the tidy expectation. The
+surface is not simply absent on a graphic-equaliser product, and the model with *fewer*
+features is the one that answers more of it. None of it is specified here.
 
 ## Feature 4 — general audio, beyond the equaliser
 

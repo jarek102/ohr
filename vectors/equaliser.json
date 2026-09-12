@@ -6,7 +6,10 @@
       "kind": "payload",
       "command": "eq_mode",
       "payload": "0000",
-      "decoded": { "value": 0, "name": "off" },
+      "decoded": {
+        "value": 0,
+        "name": "off"
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -19,7 +22,10 @@
       "kind": "payload",
       "command": "eq_mode",
       "payload": "01",
-      "decoded": { "value": 1, "name": "user_eq" },
+      "decoded": {
+        "value": 1,
+        "name": "user_eq"
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Both devices had the equaliser off when captured. Pins the value that band gains depend on."
@@ -30,7 +36,10 @@
       "kind": "payload",
       "command": "eq_mode",
       "payload": "7f",
-      "decoded": { "value": 127, "name": null },
+      "decoded": {
+        "value": 127,
+        "name": null
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "An unrecognised mode keeps its numeric value with a null name rather than raising; the set of processing chains varies by model."
@@ -70,7 +79,9 @@
       "kind": "payload",
       "command": "eq_band_gain",
       "payload": "00",
-      "decoded": { "gain_db": 0.0 },
+      "decoded": {
+        "gain_db": 0.0
+      },
       "provenance": {
         "kind": "observed",
         "device": "accentum-wireless",
@@ -83,7 +94,9 @@
       "kind": "payload",
       "command": "eq_band_gain",
       "payload": "1e",
-      "decoded": { "gain_db": 3.0 },
+      "decoded": {
+        "gain_db": 3.0
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Pins the tenths-of-a-decibel scale. A decoder treating the byte as whole decibels would report 30 dB here."
@@ -94,7 +107,9 @@
       "kind": "payload",
       "command": "eq_band_gain",
       "payload": "c4",
-      "decoded": { "gain_db": -6.0 },
+      "decoded": {
+        "gain_db": -6.0
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "The byte is signed. A decoder reading it as unsigned would report +19.6 dB — above the maximum the same device advertises."
@@ -105,7 +120,9 @@
       "kind": "payload",
       "command": "eq_band_gain",
       "payload": "ff",
-      "decoded": { "gain_db": -0.1 },
+      "decoded": {
+        "gain_db": -0.1
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "0xff is the smallest negative step, not an unavailable sentinel. Unlike the battery triplet, this field has no such sentinel."
@@ -116,7 +133,9 @@
       "kind": "payload",
       "command": "eq_bass_boost",
       "payload": "00",
-      "decoded": { "enabled": false },
+      "decoded": {
+        "enabled": false
+      },
       "provenance": {
         "kind": "observed",
         "device": "momentum-tw4",
@@ -129,10 +148,106 @@
       "kind": "payload",
       "command": "eq_bass_boost",
       "payload": "01",
-      "decoded": { "enabled": true },
+      "decoded": {
+        "enabled": true
+      },
       "provenance": {
         "kind": "constructed",
         "rationale": "Both devices had it off when captured."
+      }
+    },
+    {
+      "id": "write-band-gain-positive",
+      "kind": "frame",
+      "bytes": "ff03000204951001021e",
+      "vendor": 1173,
+      "feature": 8,
+      "type": "command",
+      "operation": 1,
+      "payload": "021e",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-13",
+        "note": "Band index then a signed gain byte in tenths of a decibel: band 2 to +3.0 dB. Sent, acknowledged, and the band read back +3.0 while the other four stayed where they were."
+      }
+    },
+    {
+      "id": "write-band-gain-negative",
+      "kind": "frame",
+      "bytes": "ff0300020495100100c4",
+      "vendor": 1173,
+      "feature": 8,
+      "type": "command",
+      "operation": 1,
+      "payload": "00c4",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The minimum this device allows, -6.0 dB, encoded as 0xc4. Reading that byte unsigned gives +19.6 dB — above the maximum the same device advertises — which is the mistake this pins against."
+      }
+    },
+    {
+      "id": "write-bass-boost-on",
+      "kind": "frame",
+      "bytes": "ff0300010495100801",
+      "vendor": 1173,
+      "feature": 8,
+      "type": "command",
+      "operation": 8,
+      "payload": "01",
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-13",
+        "note": "Sent and confirmed by read-back, then restored."
+      }
+    },
+    {
+      "id": "write-eq-mode",
+      "kind": "frame",
+      "bytes": "ff0300010495080301",
+      "vendor": 1173,
+      "feature": 4,
+      "type": "command",
+      "operation": 3,
+      "payload": "01",
+      "provenance": {
+        "kind": "constructed",
+        "rationale": "The mode setter is on feature 4 while the bands are on feature 8 — the split is the easiest thing to get wrong here. Not yet sent to hardware."
+      }
+    },
+    {
+      "id": "preset-is-one-write-per-band",
+      "kind": "sequence",
+      "sequence": "eq_preset",
+      "given": {
+        "gains": {
+          "0": -2.0,
+          "1": -1.0,
+          "3": 1.5,
+          "4": 4.0
+        },
+        "bands": 5,
+        "gain_min_db": -6.0,
+        "gain_max_db": 6.0
+      },
+      "writes": [
+        "ff0300020495100100ec",
+        "ff0300020495100101f6",
+        "ff03000204951001030f",
+        "ff030002049510010428"
+      ],
+      "verify": [
+        "ff0300010495100200",
+        "ff0300010495100201",
+        "ff0300010495100203",
+        "ff0300010495100204"
+      ],
+      "provenance": {
+        "kind": "observed",
+        "device": "momentum-tw4",
+        "date": "2026-09-13",
+        "note": "There is no command that sets a curve, so a preset is N writes and partial application is a real state. Applied in index order — arbitrary but fixed, so a half-applied preset leaves the same half every time. All four verified, then restored."
       }
     }
   ]

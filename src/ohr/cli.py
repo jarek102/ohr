@@ -382,6 +382,80 @@ def _restore(session: Session, timeout: float, target: Snapshot, rounds: int = 4
     return True
 
 
+def _cmd_eq(args: argparse.Namespace) -> int:
+    from . import equaliser
+    from .linux import FlockLease, LinuxTransport
+
+    with FlockLease().acquire(args.address, timeout=args.lease_timeout):
+        with LinuxTransport().connect(
+            args.address, timeout=args.timeout, channel=args.channel
+        ) as connection:
+            session = Session(connection)
+            config = equaliser.decode_configuration(
+                session.request(equaliser.request_configuration(), timeout=args.timeout).payload
+            )
+            gains = {
+                band: equaliser.decode_band_gain(
+                    session.request(equaliser.request_band_gain(band),
+                                    timeout=args.timeout).payload
+                )
+                for band in range(config.bands)
+            }
+            boost = equaliser.decode_bass_boost(
+                session.request(equaliser.request_bass_boost(), timeout=args.timeout).payload
+            )
+            mode = equaliser.decode_mode(
+                session.request(equaliser.request_mode(), timeout=args.timeout).payload
+            )
+
+            print(f"{args.address}  channel {connection.channel}")
+            print(f"  mode         {mode[1] or mode[0]}")
+            print(f"  range        {config.gain_min_db:+.1f} to {config.gain_max_db:+.1f} dB")
+            for band, gain in gains.items():
+                print(f"  band {band}       {gain:+.1f} dB")
+            print(f"  bass boost   {'on' if boost else 'off'}")
+
+            plan: tuple = ()
+            if args.band is not None:
+                if args.gain is None:
+                    print("--band needs --gain", file=sys.stderr)
+                    return 1
+                try:
+                    plan = equaliser.plan_band_gain(args.band, args.gain, config)
+                except ProtocolError as exc:
+                    print(f"{exc}", file=sys.stderr)
+                    return 1
+            elif args.bass_boost:
+                plan = equaliser.plan_bass_boost(args.bass_boost == "on")
+
+            if not plan:
+                return 0
+
+            if args.dry_run:
+                print(f"\nwould send {len(plan)} write(s):")
+                for step in plan:
+                    print(f"  {step.label:22} {step.write.to_bytes().hex()}")
+                    print(f"  {'verify by':22} {step.read.to_bytes().hex()}")
+                return 0
+
+            print(f"\napplying ({len(plan)} write(s), each verified by read-back):")
+            result = control.apply(session, plan, timeout=args.timeout)
+            for outcome in result.outcomes:
+                print(f"  {'ok  ' if outcome.ok else 'FAIL'} {outcome.describe()}")
+
+            if args.restore:
+                back = (
+                    equaliser.plan_band_gain(args.band, gains[args.band], config)
+                    if args.band is not None
+                    else equaliser.plan_bass_boost(boost)
+                )
+                print(f"\nrestoring:")
+                for outcome in control.apply(session, back, timeout=args.timeout).outcomes:
+                    print(f"  {'ok  ' if outcome.ok else 'FAIL'} {outcome.describe()}")
+
+            return 0 if result.complete else 4
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ohr", description="Read state from a Sennheiser Bluetooth headset."
@@ -420,6 +494,28 @@ def main(argv: list[str] | None = None) -> int:
     )
     probe.add_argument("--json", action="store_true")
     probe.set_defaults(func=_cmd_probe)
+
+    eq = sub.add_parser(
+        "eq",
+        help="show the equaliser, and set a band",
+        description=(
+            "With no option, reads the equaliser. --band sets one band and verifies it "
+            "by reading it back. A preset is one write per band, so partial application "
+            "is real — use --restore to put the previous curve back."
+        ),
+    )
+    eq.add_argument("address")
+    eq.add_argument("--band", type=int, metavar="INDEX")
+    eq.add_argument("--gain", type=float, metavar="DB",
+                    help="gain in decibels, clamped to the device's reported range")
+    eq.add_argument("--bass-boost", choices=["on", "off"])
+    eq.add_argument("--dry-run", action="store_true")
+    eq.add_argument("--restore", action="store_true",
+                    help="put the previous value back afterwards, verifying that too")
+    eq.add_argument("--channel", type=int)
+    eq.add_argument("--timeout", type=float, default=5.0)
+    eq.add_argument("--lease-timeout", type=float, default=2.0)
+    eq.set_defaults(func=_cmd_eq)
 
     noise = sub.add_parser(
         "anc",

@@ -303,7 +303,8 @@
                   "anc_mode",
                   "anc_state",
                   "anc_level",
-                  "anc_submode"
+                  "anc_submode",
+                  "eq_preset"
                 ],
                 "description": "Which planner produces this sequence."
               },

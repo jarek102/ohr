@@ -15,7 +15,7 @@ by read-back on hardware. The equaliser and connection management are still read
 | **M1** | Reach the hardware — read a battery level from a real headset | **shipped** · 2026-09-09 |
 | **M2** | Complete the read surface — status, ANC, equaliser, connections | **shipped** · 2026-09-09 |
 | **M3** | ANC writes — switch between ANC, Transparency and Off | **shipped** · 2026-09-10 |
-| **M4** | Equaliser writes — band gains, bass boost, presets | not started · next |
+| **M4** | Equaliser writes — band gains, bass boost, presets | **shipped** · 2026-09-13 |
 | **M5** | Adwaita application: status | **shipped** · 2026-09-13 |
 | **M6** | Adwaita application: control | not started · after M3, M4, M5 |
 | **M7** | Connection management — see and change who holds the headset | not started · after M3 |
@@ -132,6 +132,28 @@ replaying the field that was changed.
 
 **Done when:** a band can be changed, read back and restored; a preset either applies
 completely or reports precisely what failed.
+
+**Outcome:** shipped, and uneventful — which after M3 is worth saying. A band was set,
+verified and restored on the earbuds, then a four-band preset, then bass boost. Every
+write verified first time, nothing was coupled to anything else, and the neighbouring
+bands did not move.
+
+Two things shaped the API. **`plan_band_gain` requires the configuration**, so reading
+the device's own limits is a precondition the signature enforces rather than a sentence
+in the documentation — both models allow ±6.0 dB while the encoding reaches ±12.7.
+And **a preset is N writes in a fixed order**, because there is no command that sets a
+curve: half-applied is a real state, and applying in index order at least makes it the
+same half every time.
+
+Two findings came from the reads beforehand. The **error reason byte has more values
+than the two we knew** — probing the parametric operations produced 5 on both models and
+132 on one, neither with a meaning. And the **parametric surface is not cleanly absent**:
+the model with fewer features answers more of it, which is the opposite of what a
+graphic-versus-parametric product split would predict.
+
+`0x0803`, the mode setter, is implemented and **not yet sent to hardware** — with the
+mode reading *off* on both devices, a band-gain write may be inaudible until it is set,
+and that is a separate question rather than part of this one.
 
 ### M5 — Adwaita application: status
 

@@ -82,6 +82,13 @@ An error payload is one byte:
 |---|---|
 | 0 | feature not supported |
 | 1 | operation not supported |
+| 5 | *unknown* — seen on both models, refusing several equaliser operations |
+| 132 | *unknown* — seen once, refusing a parametric read |
+
+Only the first two are established. **The set is demonstrably open**: probing the
+parametric equaliser produced 5 on both models and 132 on one, and neither has a meaning
+yet. A decoder must keep an unrecognised reason rather than rejecting the frame — the
+alternative is a client that cannot read a refusal it was not expecting.
 
 That distinction makes an error frame a **capability probe that does not depend on the
 feature map**. Ask about a feature a device never advertised and it answers 0; ask about

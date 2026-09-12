@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .errors import InvalidLength
+from .control import Step
+from .errors import InvalidLength, InvalidValue
 from .frame import Frame, MessageType, VENDOR_SENNHEISER
 
 FEATURE_GENERIC_AUDIO = 4
@@ -122,3 +123,150 @@ def decode_bass_boost(payload: bytes) -> bool:
     if not payload:
         raise InvalidLength("bass boost payload is empty")
     return payload[0] == 1
+
+
+# --- writes -----------------------------------------------------------------
+#
+# Setters acknowledge with an empty payload, so every one of these is sent through
+# ohr.control.apply and proved by reading the band back.
+
+OP_SET_BAND_GAIN = 1
+OP_SET_BASS_BOOST = 8
+OP_SET_MODE = 3
+
+#: Widest gain the wire encoding can carry. **Not** a permissible range: the device
+#: reports its own limits in :func:`request_configuration`, and they are narrower on
+#: both models observed. Clamp to the device, not to this.
+ENCODABLE_DB = 127 / GAIN_STEPS_PER_DB
+
+
+def request_set_band_gain(index: int, gain_db: float) -> Frame:
+    """Set one band's gain. Payload is the band index then a signed gain byte.
+
+    The gain is tenths of a decibel in a signed byte, the same encoding
+    :func:`decode_band_gain` reads back.
+
+    **One byte per value is local to this command.** Other writes on this feature
+    encode values as unsigned 16-bit, so generalising from here sends half the bytes
+    the device expects.
+    """
+    if not 0 <= index <= 0xFF:
+        raise InvalidValue(f"band index out of range: {index}")
+    if not -ENCODABLE_DB <= gain_db <= ENCODABLE_DB:
+        raise InvalidValue(f"gain {gain_db} dB cannot be encoded in a signed byte")
+    steps = round(gain_db * GAIN_STEPS_PER_DB)
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_USER_EQ,
+        MessageType.COMMAND,
+        OP_SET_BAND_GAIN,
+        bytes([index, steps & 0xFF]),
+    )
+
+
+def request_set_bass_boost(on: bool) -> Frame:
+    """Turn bass boost on or off. Payload is one flag byte."""
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_USER_EQ,
+        MessageType.COMMAND,
+        OP_SET_BASS_BOOST,
+        bytes([1 if on else 0]),
+    )
+
+
+def request_set_mode(mode: int) -> Frame:
+    """Select the processing chain. Payload is one byte.
+
+    On **feature 4**, not feature 8 — the mode lives with general audio while the bands
+    live with the equaliser, which is the easiest thing to get wrong here.
+    """
+    if not 0 <= mode <= 0xFF:
+        raise InvalidValue(f"eq mode out of range: {mode}")
+    return Frame(
+        VENDOR_SENNHEISER,
+        FEATURE_GENERIC_AUDIO,
+        MessageType.COMMAND,
+        OP_SET_MODE,
+        bytes([mode]),
+    )
+
+
+def _quantised(gain_db: float) -> float:
+    """The gain the device will actually hold, given 0.1 dB steps."""
+    return round(gain_db * GAIN_STEPS_PER_DB) / GAIN_STEPS_PER_DB
+
+
+def plan_band_gain(index: int, gain_db: float, configuration: Configuration) -> tuple[Step, ...]:
+    """Set one band, verified by reading that band back.
+
+    The configuration is **required, not optional**. The permissible range is whatever
+    this device reports, not what the encoding can carry, and the only way to know it is
+    to have read it — so the signature makes that a precondition rather than a sentence
+    in the documentation.
+
+    Verification compares against the *quantised* value, because the device stores 0.1 dB
+    steps and will not read back a request for 3.14 dB unchanged.
+    """
+    if not 0 <= index < configuration.bands:
+        raise InvalidValue(
+            f"band {index} does not exist; this device reports {configuration.bands}"
+        )
+    if not configuration.gain_min_db <= gain_db <= configuration.gain_max_db:
+        raise InvalidValue(
+            f"gain {gain_db} dB is outside this device's range "
+            f"{configuration.gain_min_db} to {configuration.gain_max_db} dB"
+        )
+    return (
+        Step(
+            label=f"band {index} = {gain_db:+.1f} dB",
+            write=request_set_band_gain(index, gain_db),
+            read=request_band_gain(index),
+            decode=decode_band_gain,
+            expect=_quantised(gain_db),
+        ),
+    )
+
+
+def plan_bass_boost(on: bool) -> tuple[Step, ...]:
+    """Set bass boost, verified by read-back."""
+    return (
+        Step(
+            label=f"bass boost {'on' if on else 'off'}",
+            write=request_set_bass_boost(on),
+            read=request_bass_boost(),
+            decode=decode_bass_boost,
+            expect=on,
+        ),
+    )
+
+
+def plan_mode(mode: int) -> tuple[Step, ...]:
+    """Select the processing chain, verified by read-back."""
+    return (
+        Step(
+            label=f"eq mode {MODES.get(mode, mode)}",
+            write=request_set_mode(mode),
+            read=request_mode(),
+            decode=lambda payload: decode_mode(payload)[0],
+            expect=mode,
+        ),
+    )
+
+
+def plan_preset(gains: dict[int, float], configuration: Configuration) -> tuple[Step, ...]:
+    """Apply several bands as **one write per band**.
+
+    There is no single command that sets a curve here, so a preset is genuinely N
+    writes and **partial application is a real state** — stop halfway and the device is
+    holding half of one preset and half of another, which is a shape no preset
+    describes. :func:`ohr.control.apply` stops at the first step that does not verify,
+    so the caller learns exactly how far it got and can put the rest back.
+
+    Bands are applied in index order, which is arbitrary but fixed: a half-applied
+    preset is easier to reason about when the same half applies every time.
+    """
+    steps: list[Step] = []
+    for index in sorted(gains):
+        steps.extend(plan_band_gain(index, gains[index], configuration))
+    return tuple(steps)
