@@ -124,28 +124,33 @@ channel for about two minutes and **was followed by an audible drop in quality t
 reconnect cleared**, which looks exactly like a codec renegotiating downwards under
 contention. Once `0x0800` was found, that became testable.
 
-It did not reproduce. On the over-ear model, with a steady stream and the codec sampled
+It did not reproduce, on either model, with a steady stream and the codec sampled
 throughout by both the device and the host stack:
 
-| Load | Result |
-|---|---|
-| 4,282 answered reads in 100 s (~43/s) | `aptx_hd` throughout, no change |
-| 110 *unanswered* requests over 110 s — the sweep's actual shape | `aptx_hd` throughout, no change |
+| Model | Load | Result |
+|---|---|---|
+| over-ear | 4,282 answered reads in 100 s (~43/s) | `aptx_hd` throughout |
+| over-ear | 110 *unanswered* requests over 110 s | `aptx_hd` throughout |
+| earbuds | both at once — unanswered requests interleaved with saturating reads | `aptx` throughout |
 
-The second is the important one. The original sweep was not high throughput: two thirds
-of it was requests to features above 31, so the channel spent most of its time holding
-one unanswered request open. Reproducing that shape changed nothing either.
+The unanswered-request runs are the important ones. The original sweep was not high
+throughput: two thirds of it was aimed at features above 31, so the channel spent most
+of its time holding one unanswered request open. That is a different stressor from
+saturation, and reproducing its shape changed nothing either.
 
-**What this does and does not settle.** The codec did not change on this model under a
-load heavier than the one that preceded the report. It does not show that nothing
-degraded: this read names a codec and nothing finer, so dropouts, retransmissions, or a
-bitrate shift inside an adaptive codec would all be invisible to it. Nor was the model
-where the degradation was reported tested — no stream could be established to it.
+The earbuds had somewhere to fall, which is worth confirming rather than assuming. Their
+host offers SBC, SBC-XQ, AAC and aptX, and aptX — the highest priority of the four — was
+active before, during and after. They were not already sitting in a degraded state with
+no room to drop further.
 
-So: the observation stands as unexplained, the mechanism does not. Treat a burst of
-requests as costly in time rather than as known to hurt the audio, and if you want the
-question settled properly it needs the other model and an instrument finer than a codec
-name.
+**What this does and does not settle.** No codec changed on either model under load
+heavier than the one that preceded the report. It does not show that nothing degraded:
+this read names a codec and nothing finer, so dropouts, retransmissions, or a bitrate
+shift inside an adaptive codec would all be invisible to it.
+
+So the observation stands and the mechanism does not. Treat a burst of requests as
+costly in time rather than as known to hurt the audio. Settling it properly now needs an
+instrument finer than a codec name — packet-level statistics rather than another read.
 
 ## Writes
 
