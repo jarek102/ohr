@@ -16,7 +16,7 @@ by read-back on hardware. The equaliser and connection management are still read
 | **M2** | Complete the read surface — status, ANC, equaliser, connections | **shipped** · 2026-09-09 |
 | **M3** | ANC writes — switch between ANC, Transparency and Off | **shipped** · 2026-09-10 |
 | **M4** | Equaliser writes — band gains, bass boost, presets | not started · next |
-| **M5** | Adwaita application: status | **in progress** · ohr-gtk |
+| **M5** | Adwaita application: status | **shipped** · 2026-09-13 |
 | **M6** | Adwaita application: control | not started · after M3, M4, M5 |
 | **M7** | Connection management — see and change who holds the headset | not started · after M3 |
 | **M8** | Live state — stay correct when something else changes it | not started · after M2, and now load-bearing |
@@ -144,12 +144,24 @@ completely or reports precisely what failed.
 
 **Done when:** the application is worth leaving open to monitor a headset.
 
-**In progress** as [ohr-gtk](https://github.com/jarek102/ohr-gtk), which started as a
-surface for manual testing and is honest about being one. Status, the three modes, and
-a developer panel listing every command with raw hex both ways. Two things it already
-settles: all Bluetooth work belongs on a thread that owns the lease, the socket and the
-session together, and a mode change must re-read the flags in the same operation that
-writes them.
+**Outcome:** shipped as [ohr-gtk](https://github.com/jarek102/ohr-gtk).
+
+Three design decisions came out of the protocol work rather than from the toolkit.
+**Reading is tiered** — identity once, moving parts every three seconds, settings and
+peers every half-minute — because a window left open would otherwise hold the channel
+busy forever and nothing here can show that is harmless. **A mode change re-reads the
+flags in the operation that writes them**, since a plan built from the last poll
+verifies perfectly and selects the wrong mode. And **all Bluetooth work sits on a thread
+that owns the lease, the socket and the session together**, so a five-second timeout
+does not freeze the window during exactly the cases worth watching.
+
+Connections is the section that earns leaving it open: who is paired, who holds one of
+the two slots, and which entry is this computer. That is the thing the vendor
+application is worst at.
+
+One limit worth stating: the layout is built from the feature map, but **both models
+here have every feature the window draws**, so nothing actually disappears on either.
+That logic is for models that differ and is so far unexercised.
 
 ### M6 — Adwaita application: control
 
