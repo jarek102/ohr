@@ -114,23 +114,38 @@ unsupported.** A device that lacks a feature says so, in about a millisecond. On
 says nothing is either out of range, wedged, or busy — and at least one model here is
 known to ignore a first request and answer a retry.
 
-### The control channel is not free
+### Does control traffic degrade the audio? Measured: not by codec
 
-Stop a sweep at 31. Beyond the wasted time, the sweep that established the boundary
-above held the channel for about two minutes, and **the audio noticeably degraded while
-it ran** — cleared by disconnecting and reconnecting, which is what a codec
-renegotiating downwards under contention would look like.
+Stop a sweep at 31 — most of a full sweep is time spent waiting out features that do not
+exist.
 
-Control traffic and the audio link share a radio. Probe when nothing is playing, keep
-routine polling modest, and treat a burst of requests as something with a cost to the
-person listening rather than a free way to learn about the device.
+A stronger claim used to sit here. The sweep that established that boundary held the
+channel for about two minutes and **was followed by an audible drop in quality that a
+reconnect cleared**, which looks exactly like a codec renegotiating downwards under
+contention. Once `0x0800` was found, that became testable.
 
-That conclusion currently rests on one person's ears, which is weaker than it should be
-for something this consequential. **The devices know their own negotiated codec** — the
-vendor application displays it, naming a codec and a sample rate, or saying there is no
-stream. Whatever command carries that would turn this from an impression into a
-measurement: read it, run the burst, read it again. Finding it is worth more than
-another listening test.
+It did not reproduce. On the over-ear model, with a steady stream and the codec sampled
+throughout by both the device and the host stack:
+
+| Load | Result |
+|---|---|
+| 4,282 answered reads in 100 s (~43/s) | `aptx_hd` throughout, no change |
+| 110 *unanswered* requests over 110 s — the sweep's actual shape | `aptx_hd` throughout, no change |
+
+The second is the important one. The original sweep was not high throughput: two thirds
+of it was requests to features above 31, so the channel spent most of its time holding
+one unanswered request open. Reproducing that shape changed nothing either.
+
+**What this does and does not settle.** The codec did not change on this model under a
+load heavier than the one that preceded the report. It does not show that nothing
+degraded: this read names a codec and nothing finer, so dropouts, retransmissions, or a
+bitrate shift inside an adaptive codec would all be invisible to it. Nor was the model
+where the degradation was reported tested — no stream could be established to it.
+
+So: the observation stands as unexplained, the mechanism does not. Treat a burst of
+requests as costly in time rather than as known to hurt the audio, and if you want the
+question settled properly it needs the other model and an instrument finer than a codec
+name.
 
 ## Writes
 

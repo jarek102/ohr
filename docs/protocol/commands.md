@@ -364,6 +364,11 @@ Confirmed against the host's own Bluetooth stack rather than against itself: wit
 playing, the earbuds answered 2 while the host reported aptX for that link, and the
 over-ear model answered 5 while the host reported aptX HD.
 
+**The two sources disagree when idle, and the device is the one worth believing.** With
+no stream the host still names the codec it negotiated, while the device answers 255.
+The host is describing a configuration; the device is describing whether audio is
+actually flowing.
+
 `0x081e` was expected to carry the codec *and a sample rate*. Neither model implements
 it — both answer *operation not supported*.
 

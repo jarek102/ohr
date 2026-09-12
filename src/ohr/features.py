@@ -169,12 +169,12 @@ def request_capability_probe(feature: int) -> Frame:
     sweep over the whole seven-bit range spends most of its time waiting for timeouts
     that mean nothing. **Stop at 31.**
 
-    That is not only about speed. A full sweep with a one-second timeout holds the
-    control channel for roughly two minutes, and running one while audio was playing
-    was followed by an audible drop in quality that disconnecting and reconnecting
-    cleared — consistent with the codec having renegotiated downwards under the
-    contention. Control traffic and the audio link share a radio. Sweep when nothing is
-    playing, and keep ordinary polling modest.
+    A full sweep with a one-second timeout holds the control channel for roughly two
+    minutes, nearly all of it waiting on features that do not exist. One such sweep was
+    followed by an audible drop in audio quality; a later attempt to reproduce that,
+    with heavier load and with the sweep's own shape, did not move the codec at all.
+    See ``docs/protocol/framing.md``. The waste is the reason to stop at 31; the audio
+    is an open question rather than a demonstrated cost.
     """
     if not 0 <= feature <= 0x7F:
         raise InvalidValue(f"feature out of range: {feature}")
