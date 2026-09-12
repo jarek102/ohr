@@ -299,6 +299,36 @@ sidetone, auto-answer, gaming mode, mono downmix, volume limit. Several can be n
 without sending a single write, by changing the setting in the vendor application and
 re-reading over the wire.
 
+## Known problems
+
+Device behaviour that gets in the way, recorded so the evidence is in one place when
+someone has time for it.
+
+### The earbuds get stuck paused
+
+On connecting, the earbuds sometimes come up in a paused state that playback will not
+start out of. Observed against a PC and **also against a phone**.
+
+That second detail is what makes this worth writing down: a fault that follows the
+device across two unrelated hosts is not a driver problem on either of them, and no
+amount of work on the Linux side will fix it.
+
+What the protocol already rules out, or fails to:
+
+- **Wear detection is not the obvious culprit.** The earbuds report on-head detection
+  *off* at `0x0401` — remembering that 0 means on there — so a bud that thought it had
+  been removed is not the explanation, at least not through that setting.
+- **Transparency auto-pause is not it either.** `0x1801` reads *keep playing* on this
+  device, and the pauses happen with transparency off.
+- **Nothing here can see the media state.** Play and pause travel over standard AVRCP,
+  not this protocol, so a desynchronised transport state between host and headset would
+  be entirely invisible to everything specified in these documents.
+
+The cheap next step is to catch it in the act: when it happens, read `0x0401` and the
+charger state before touching anything, and compare against a healthy connection. If
+those match, the fault is in the media transport rather than in anything this library
+speaks, and the investigation moves to AVRCP.
+
 ## Not planned
 
 Capabilities some devices advertise that are not intended for implementation soon:

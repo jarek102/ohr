@@ -143,14 +143,27 @@ host offers SBC, SBC-XQ, AAC and aptX, and aptX — the highest priority of the 
 active before, during and after. They were not already sitting in a degraded state with
 no room to drop further.
 
-**What this does and does not settle.** No codec changed on either model under load
-heavier than the one that preceded the report. It does not show that nothing degraded:
-this read names a codec and nothing finer, so dropouts, retransmissions, or a bitrate
-shift inside an adaptive codec would all be invisible to it.
+**What this settles is narrower than "nothing happened".** Describing the two events
+side by side is what makes the difference clear:
 
-So the observation stands and the mechanism does not. Treat a burst of requests as
-costly in time rather than as known to hurt the audio. Settling it properly now needs an
-instrument finer than a codec name — packet-level statistics rather than another read.
+| | Original | These runs |
+|---|---|---|
+| Symptom | **choppy, badly degraded** | audio fine throughout |
+| Codec | not measured | unchanged |
+
+*Choppy* is the word that matters. Stuttering is a **dropout** signature — packets not
+arriving in time — and a codec renegotiation does not sound like that; it sounds like a
+continuous stream that is merely worse. So the hypothesis these runs tested was probably
+the wrong one from the start, and a codec name was the wrong instrument: it cannot see
+dropouts, retransmissions, or a bitrate shift inside an adaptive codec.
+
+What is now established: **whatever happened, it was not a codec downgrade.** The
+contention idea itself is untested rather than refuted, and the symptom points at the
+radio rather than at negotiation. Treat a burst of requests as costly in time, and
+regard heavy control traffic during playback as unproven rather than safe.
+
+Settling it wants packet statistics from the host stack — dropouts, retransmissions,
+buffer underruns — not another protocol read.
 
 ## Writes
 
